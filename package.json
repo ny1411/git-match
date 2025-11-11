@@ -1,0 +1,20 @@
+{
+	"name": "git-match",
+	"version": "1.0.0",
+	"main": "index.js",
+	"private": true,
+	"scripts": {
+		"dev": "concurrently \"npm run dev -w frontend\" \"npm start -w backend\""
+	},
+	"workspaces": [
+		"frontend",
+		"backend"
+	],
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"concurrently": "^9.2.1"
+	}
+}
