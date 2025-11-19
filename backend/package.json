@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "main": "src/server.ts",
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
@@ -12,8 +12,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -25,9 +23,9 @@
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   }
-
-  
 }
