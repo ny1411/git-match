@@ -1,13 +1,12 @@
-import type { FC } from "react";
+import type { FC, InputHTMLAttributes } from "react";
 
-export const InputField: FC<{
-	label: string;
-	type?: string;
-	placeholder?: string;
-}> = ({ label, type = "text" }) => (
+interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+    label: string;
+}
+export const InputField: FC<InputFieldProps> = ({ label, ...props}) => (
 	<div className="group relative z-0 w-full mb-8">
 		<input
-			type={type}
+			{...props}
 			placeholder=" "
 			className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-purple-500 peer"
 		/>

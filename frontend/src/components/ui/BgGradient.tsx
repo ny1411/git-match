@@ -1,6 +1,6 @@
 export default function BgGradient() {
 	return (
-		<div className="absolute w-full h-screen overflow-hidden bg-black -z-10">
+		<div className="fixed w-screen h-screen overflow-hidden bg-black -z-10">
 			{/* Deep Purple */}
 			<div className="absolute -top-20 -left-20 w-[600px] h-[600px] bg-[#2A006B] blur-[200px] rounded-full opacity-80 animate-pulse"></div>
 			{/* Magenta Blob */}
