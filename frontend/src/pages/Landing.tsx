@@ -12,7 +12,7 @@ const LandingPage: FC = () => {
 	return (
 		<>
 			{/* Main Page Container */}
-			<div className="w-screen relative flex flex-col min-h-screen text-white overflow-x-hidden">
+			<div className="min-h-screen w-screen flex flex-col text-white overflow-x-hidden">
 				<BgGradient />
 				<Header />
 				{/* Main Content */}
@@ -36,7 +36,7 @@ const LandingPage: FC = () => {
 								<button
 									onClick={onGetStarted}
 									className="absolute top-1.5 left-1.5 bottom-1.5 w-[55%] 
-                                             bg-gradient-to-tr from-pink-500 to-purple-700
+                                             bg-linear-to-tr from-pink-500 to-purple-700
                                              rounded-full text-white font-bold text-xl
                                              flex items-center justify-center cursor-pointer
                                              transition-transition duration-300 hover:scale-105"
