@@ -4,6 +4,10 @@ import { InputField } from "../components/ui/InputField";
 
 const Login: FC = () => {
 	const [loginMode, setLoginMode] = useState("sign-up");
+
+	const handleLogin = async () => {};
+	const handleSignUp = async () => {};
+
 	return (
 		<div className="min-h-screen w-full bg-[#0f0a1e] flex items-center justify-center p-4">
 			{/* Card Container */}
@@ -11,7 +15,7 @@ const Login: FC = () => {
 				{/* Left Side: Form */}
 				<div className="w-full md:w-5/12 p-8 md:p-12 flex flex-col relative">
 					{/* Background Gradient for Left Side (Subtle) */}
-					<div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-900/20 via-transparent to-transparent pointer-events-none"></div>
+					<div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-purple-900/20 via-transparent to-transparent pointer-events-none"></div>
 
 					{/* Toggle Pill */}
 					<div className="relative z-10 flex w-full max-w-[280px] mx-auto mb-16 bg-white rounded-full p-1 h-14 shadow-lg">
@@ -51,7 +55,10 @@ const Login: FC = () => {
 
 							{/* Action Button */}
 							<div className="mt-12 flex justify-center">
-								<button className="w-full max-w-[200px] py-3 rounded-full bg-gradient-to-r from-[#a82ee6] to-[#7125d8] text-white font-bold tracking-wider shadow-lg shadow-purple-500/30 hover:scale-105 transition-transform">
+								<button
+									onClick={handleSignUp}
+									className="w-full max-w-[200px] py-3 rounded-full bg-linear-to-r from-[#a82ee6] to-[#7125d8] text-white font-bold tracking-wider shadow-lg shadow-purple-500/30 hover:scale-105 transition-transform"
+								>
 									SIGN UP
 								</button>
 							</div>
@@ -67,7 +74,10 @@ const Login: FC = () => {
 
 							{/* Action Button */}
 							<div className="mt-12 flex justify-center">
-								<button className="w-full max-w-[200px] py-3 rounded-full bg-gradient-to-r from-[#a82ee6] to-[#7125d8] text-white font-bold tracking-wider shadow-lg shadow-purple-500/30 hover:scale-105 transition-transform">
+								<button
+									onClick={handleLogin}
+									className="w-full max-w-[200px] py-3 rounded-full bg-linear-to-r from-[#a82ee6] to-[#7125d8] text-white font-bold tracking-wider shadow-lg shadow-purple-500/30 hover:scale-105 transition-transform"
+								>
 									LOGIN
 								</button>
 							</div>
@@ -85,7 +95,7 @@ const Login: FC = () => {
 							className="w-full h-full object-cover opacity-80"
 						/>
 						{/* Overlay Gradient to match the theme */}
-						<div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1e]/80 via-transparent to-[#0f0a1e]/30 mix-blend-multiply"></div>
+						<div className="absolute inset-0 bg-linear-to-t from-[#0f0a1e]/80 via-transparent to-[#0f0a1e]/30 mix-blend-multiply"></div>
 					</div>
 
 					{/* Content Overlay */}
