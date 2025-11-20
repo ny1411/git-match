@@ -39,10 +39,10 @@ const Profile: FC = () => {
 		"https://images.unsplash.com/photo-1554083021-dd6b85a6d423?q=80&w=150&h=150&fit=crop";
 
 	return (
-		<div className="w-screen relative flex flex-col justify-center items-center min-h-screen text-white overflow-x-hidden">
+		<div className="w-screen relative flex flex-col md:justify-center items-center min-h-screen text-white overflow-x-hidden">
 			<BgGradient />
 
-			<div className="w-full max-w-7xl px-4 md:px-8">
+			<div className="w-full max-w-7xl my-4 px-4 md:px-8">
 				{/* Main Card */}
 				<div className="grid grid-cols-1 md:grid-cols-5 bg-white/5 backdrop-blur-sm rounded-4xl shadow-2xl border border-white/10 overflow-hidden">
 					{/* LEFT: FORM SECTION */}
@@ -65,6 +65,9 @@ const Profile: FC = () => {
 									name="age"
 									label="Age"
 									value={String(age)}
+									disabled
+									readOnly
+									className="cursor-not-allowed"
 									type="number"
 								/>
 								<InputField
@@ -127,7 +130,7 @@ const Profile: FC = () => {
 					</div>
 
 					{/* RIGHT: PREVIEW SECTION */}
-					<div className="col-span-1 md:col-span-2 relative min-h-[300px] md:min-h-full">
+					<div className="hidden md:flex col-span-1 md:col-span-2 relative min-h-[300px] md:min-h-full">
 						<img
 							src="https://images.unsplash.com/photo-1605776332618-6f0b905be303?q=80&w=1500&auto=format&fit=crop"
 							alt="Profile Preview Background"
@@ -137,7 +140,7 @@ const Profile: FC = () => {
 						{/* Overlay */}
 						<div className="absolute inset-0 bg-black/30 backdrop-blur-xs p-6 flex flex-col justify-end">
 							{/* Top Info Bar */}
-							<div className="flex items-center justify-between bg-white/10 p-3 rounded-lg mb-4">
+							<div className="flex items-center justify-between bg-black/45 p-3 rounded-lg mb-4">
 								<div className="flex items-center">
 									<img
 										src={sampleImage}
@@ -160,36 +163,29 @@ const Profile: FC = () => {
 
 							{/* Summary Block */}
 							<div className="bg-black/45 p-4 rounded-lg">
-								<p className="text-sm text-purple-300 mb-2">
-									# About me & GitHub Summary
-								</p>
-
 								<div className="text-sm text-white mb-4 space-y-1">
-									<p>&lt;About me </p>
+									<p className="text-purple-300">
+										&lt;About me{" "}
+									</p>
 									<p className="pl-4 text-xs text-gray-200 line-clamp-2">
 										value="{profileData.about}"
 									</p>
-									<p>&gt;</p>
+									<p className="text-purple-300">&gt;</p>
 								</div>
 
 								{/* GitHub Stats */}
-								<div className="flex justify-between items-center mb-4">
-									<p className="text-sm text-purple-300">
-										# GitHub Summary
-									</p>
-									<div className="flex space-x-2">
-										<div className="bg-gray-500/80 px-2 py-0.5 rounded text-xs font-medium">
-											<span className="text-white mr-1">
-												31
-											</span>
-											Repos
-										</div>
-										<div className="bg-gray-500/80 px-2 py-0.5 rounded text-xs font-medium">
-											<span className="text-white mr-1">
-												31
-											</span>
-											Commits
-										</div>
+								<div className="flex items-center gap-2 mb-4">
+									<div className="bg-purple-500/80 px-2 py-0.5 rounded text-xs font-medium">
+										<span className="text-white mr-1">
+											31
+										</span>
+										Repos
+									</div>
+									<div className="bg-purple-500/80 px-2 py-0.5 rounded text-xs font-medium">
+										<span className="text-white mr-1">
+											78
+										</span>
+										Commits
 									</div>
 								</div>
 
@@ -206,7 +202,7 @@ const Profile: FC = () => {
 									].map((lang) => (
 										<span
 											key={lang}
-											className="bg-purple-600/50 text-xs px-2 py-1 rounded-full text-white"
+											className="bg-purple-700/80 text-xs px-2 py-1 rounded-full text-white"
 										>
 											{lang}
 										</span>
