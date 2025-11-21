@@ -4,7 +4,7 @@
 	"main": "index.js",
 	"private": true,
 	"scripts": {
-		"dev": "concurrently \"npm run dev -w frontend\" \"npm start -w backend\""
+		"dev": "concurrently \"npm run build -w backend && npm start -w backend\" \"npm run dev -w frontend\""
 	},
 	"workspaces": [
 		"frontend",
