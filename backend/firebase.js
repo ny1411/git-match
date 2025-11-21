@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AssIzaSyAmL6ujzvuqvP3PozdVZfoKd475IQ-tvV4-pesudo-api",
+  apiKey: "AIzaSyAmL6ujzvuqvP3PozdVZfoKd475IQ-tvV4",
   authDomain: "gitmatch-20e6d.firebaseapp.com",
   projectId: "gitmatch-20e6d",
   storageBucket: "gitmatch-20e6d.firebasestorage.app",
@@ -15,3 +15,5 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+
+const callback_url = "https://gitmatch-20e6d.firebaseapp.com/__/auth/handler"
