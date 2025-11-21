@@ -16,5 +16,14 @@
 	"description": "",
 	"devDependencies": {
 		"concurrently": "^9.2.1"
+	},
+	"dependencies": {
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.5",
+		"cors": "^2.8.5",
+		"dotenv": "^17.2.3",
+		"express": "^5.1.0",
+		"firebase-admin": "^13.6.0",
+		"typescript": "^5.9.3"
 	}
 }
