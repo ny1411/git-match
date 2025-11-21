@@ -12,6 +12,7 @@ import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
 import Matches from "../pages/Matches";
 import Chat from "../pages/Chat";
+import AuthCallback from "../pages/AuthCallback";
 
 const AppRouter: React.FC = () => {
 	return (
@@ -26,6 +27,7 @@ const AppRouter: React.FC = () => {
 
 			{/* Other routes from your structure */}
 			<Route path="/login" element={<Login />} />
+			<Route path="/auth/callback" element={<AuthCallback />} />
 			<Route path="/onboarding" element={<Onboarding />} />
 			<Route path="/dashboard" element={<Dashboard />} />
 			<Route path="/profile" element={<Profile />} />
