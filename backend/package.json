@@ -1,6 +1,7 @@
 {
   "name": "gitmatch-backend",
   "version": "1.0.0",
+  "type": "module",
   "main": "src/server.ts",
   "scripts": {
     "dev": "nodemon --exec node --loader ts-node/esm src/server.ts",
