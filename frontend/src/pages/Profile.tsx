@@ -35,7 +35,7 @@ const Profile: FC = () => {
 		}));
 	};
 
-	const sampleImage =
+	const profilePicture =
 		"https://images.unsplash.com/photo-1554083021-dd6b85a6d423?q=80&w=150&h=150&fit=crop";
 
 	return (
@@ -97,7 +97,7 @@ const Profile: FC = () => {
 								<InputField
 									onChange={handleChange}
 									name="dob"
-									label="DOB"
+									label="Date of Birth"
 									value={profileData.dob}
 									type="date"
 								/>
@@ -111,11 +111,11 @@ const Profile: FC = () => {
 							{/* Upload Column */}
 							<div className="col-span-3 md:col-span-1 flex flex-col items-center">
 								<img
-									src={sampleImage}
+									src={profilePicture}
 									alt="Upload Preview"
 									className="w-28 h-28 rounded-full object-cover border-4 border-purple-500/50 mb-3"
 								/>
-								<button className="text-sm text-gray-300 hover:text-white transition-colors">
+								<button className="text-sm text-gray-300 hover:text-white transition-colors cursor-pointer">
 									Upload Image
 								</button>
 							</div>
@@ -123,7 +123,10 @@ const Profile: FC = () => {
 
 						{/* Save Button */}
 						<div className="mt-8 pt-4">
-							<button className="w-40 py-3 rounded-full bg-linear-to-r from-purple-600 to-fuchsia-500 text-white font-bold tracking-wider shadow-lg shadow-purple-500/40 hover:scale-105 transition-transform">
+							<button
+								className="w-40 py-3 rounded-full bg-linear-to-r from-purple-600 to-fuchsia-500 text-white font-bold 
+							tracking-wider shadow-lg shadow-purple-500/40 hover:scale-105 transition-transform cursor-pointer"
+							>
 								SAVE
 							</button>
 						</div>
@@ -143,7 +146,7 @@ const Profile: FC = () => {
 							<div className="flex items-center justify-between bg-black/45 p-3 rounded-lg mb-4">
 								<div className="flex items-center">
 									<img
-										src={sampleImage}
+										src={profilePicture}
 										alt="User Profile"
 										className="w-12 h-12 rounded-full object-cover mr-3"
 									/>
@@ -156,7 +159,7 @@ const Profile: FC = () => {
 										</p>
 									</div>
 								</div>
-								<button className="text-sm text-purple-300 font-medium hover:text-white transition-colors">
+								<button className="text-sm text-purple-300 font-medium hover:text-white transition-colors cursor-pointer">
 									View Gallery
 								</button>
 							</div>
