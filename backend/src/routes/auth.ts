@@ -63,6 +63,8 @@ router.post('/signup', async (req, res) => {
       message = 'Invalid email address';
     } else if (error.code === 'auth/weak-password') {
       message = 'Password should be at least 6 characters';
+    } else{
+      message = error.code ? `Firebase Error: ${error.code}` : message;
     }
 
     const response: AuthResponse = {
