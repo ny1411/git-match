@@ -1,15 +1,10 @@
 export interface SignupRequest {
-    fullName: string;
-    email: string;
-    githubProfileUrl: string;
-    password: string;
-    role: string;
-    location: string;
-    aboutMe: string;
-    age?: number;
-    dateOfBirth?: string;
-    profileImage?: string; // base64 string for signup
-  }
+  fullName: string;
+  email: string;
+  githubProfileUrl: string;
+  password: string;
+  // No optional fields for signup - they'll be added in profile later
+}
   
   export interface LoginRequest {
     email: string;
