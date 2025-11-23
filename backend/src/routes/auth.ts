@@ -4,19 +4,23 @@ import { SignupRequest, LoginRequest, AuthResponse, UserProfile } from '../types
 
 const router = Router();
 
-// Signup endpoint
+// Signup endpoint - Only basic fields
 router.post('/signup', async (req, res) => {
   try {
+    console.log('Signup request body:', req.body); // Debug log
+    
     const { fullName, email, githubProfileUrl, password }: SignupRequest = req.body;
 
-    // Validate required fields
+    // Validate only basic required fields
     if (!fullName || !email || !githubProfileUrl || !password) {
       const response: AuthResponse = {
         success: false,
-        message: 'All fields are required: fullName, email, githubProfileUrl, password'
+        message: 'All basic fields are required: fullName, email, githubProfileUrl, password'
       };
       return res.status(400).json(response);
     }
+
+    console.log('Creating user in Firebase Auth...'); // Debug log
 
     // Create user in Firebase Auth
     const userRecord = await admin.auth().createUser({
@@ -25,21 +29,27 @@ router.post('/signup', async (req, res) => {
       displayName: fullName,
     });
 
-    // Create initial user profile with default values
+    console.log('Firebase user created:', userRecord.uid); // Debug log
+
+    // Create minimal user profile
     const userProfile: UserProfile = {
       uid: userRecord.uid,
       fullName,
       email,
       githubProfileUrl,
-      role: 'Software Developer', // Default role
-      location: 'Unknown', // Default location
-      aboutMe: 'Passionate developer looking to connect with like-minded tech enthusiasts!', // Default about me
+      role: 'Software Developer', // Default
+      location: 'Unknown', // Default
+      aboutMe: 'Passionate developer looking to connect with like-minded tech enthusiasts!', // Default
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
+    console.log('Storing profile in Firestore...'); // Debug log
+
     // Store in Firestore
     await admin.firestore().collection('users').doc(userRecord.uid).set(userProfile);
+
+    console.log('Creating custom token...'); // Debug log
 
     // Create custom token for client-side authentication
     const token = await admin.auth().createCustomToken(userRecord.uid);
@@ -51,10 +61,11 @@ router.post('/signup', async (req, res) => {
       token
     };
 
+    console.log('Signup successful!'); // Debug log
     res.status(201).json(response);
 
   } catch (error: any) {
-    console.error('Signup error:', error);
+    console.error('Signup error details:', error); // Detailed error log
 
     let message = 'Failed to create user';
     if (error.code === 'auth/email-already-exists') {
@@ -89,7 +100,7 @@ router.post('/login', async (req, res) => {
     // Get user by email
     const userRecord = await admin.auth().getUserByEmail(email);
     
-    // Create custom token (password verification happens on frontend with Firebase Client SDK)
+    // Create custom token
     const token = await admin.auth().createCustomToken(userRecord.uid);
 
     // Get user profile from Firestore
