@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import admin from '../firebase/admin.js';
 import { StorageService } from '../utils/storage.js';
 import { UpdateProfileRequest, ProfileResponse, UserProfile } from '../types/user.js';
@@ -12,6 +13,15 @@ interface AuthenticatedRequest extends Request {
 
 const router = Router();
 
+
+// Rate limiter: e.g., max 100 requests per 15 minutes per IP
+const profileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' }
+});
 // Middleware to verify Firebase ID token
 const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = (req.headers.authorization || '') as string;
@@ -32,7 +42,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Get current user's profile (authenticated)
-router.get('/me', verifyToken, async (req: Request, res: Response) => {
+router.get('/me', profileLimiter, verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).user!.uid;
 
@@ -60,7 +70,7 @@ router.get('/me', verifyToken, async (req: Request, res: Response) => {
 });
 
 // Update current user's profile (authenticated)
-router.put('/me', verifyToken, async (req: Request, res: Response) => {
+router.put('/me', profileLimiter, verifyToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).user!.uid;
     const updateData = req.body as UpdateProfileRequest;
