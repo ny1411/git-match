@@ -8,6 +8,7 @@ import React, {
 // Define the shape of the context data
 interface AuthContextType {
 	userProfile: UserProfile | null;
+	token: string | null;
 	isLoading: boolean;
 	error: string | null;
 	signup: (data: SignupData) => Promise<AuthResponse>;
@@ -51,7 +52,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	
-	const [userProfile, setUserProfile] = useState<UserProfile | null>(null); // Firestore/API profile data
+	const [userProfile, setUserProfile] = useState<UserProfile | null>(null); 
+	const [token, setToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +79,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				setIsLoading(false);
 				return result;
 			}
+			console.log("Login successful, token received:", result.token);
+			setToken(result.token);
 
 			// Fetch the user profile data here after sign-in
 			setIsLoading(false);
@@ -132,6 +136,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
 	const value: AuthContextType = {
 		userProfile,
+		token,
 		isLoading,
 		error,
 		signup,
