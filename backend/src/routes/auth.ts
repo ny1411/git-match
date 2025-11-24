@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import admin from '../firebase/admin.js';
+import axios from 'axios';
 import { SignupRequest, LoginRequest, AuthResponse, UserProfile } from '../types/user.js';
 
 const router = Router();
@@ -38,7 +39,13 @@ router.post('/signup', async (req, res) => {
       email,
       githubProfileUrl,
       role: 'Software Developer', // Default
-      location: 'Unknown', // Default
+      // New optional fields (can be null)
+      city: null,
+      country: null,
+      location: null,
+      gender: null,
+      interest: null,
+      goal: null,
       aboutMe: 'Passionate developer looking to connect with like-minded tech enthusiasts!', // Default
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -52,14 +59,38 @@ router.post('/signup', async (req, res) => {
     console.log('Creating custom token...'); // Debug log
 
     // Create custom token for client-side authentication
-    const token = await admin.auth().createCustomToken(userRecord.uid);
+    const customToken = await admin.auth().createCustomToken(userRecord.uid);
+
+    // Try to exchange the custom token for an ID token (convenience for clients/tests)
+    let idToken: string | undefined = undefined;
+    let refreshToken: string | undefined = undefined;
+    let expiresIn: string | undefined = undefined;
+    const apiKey = process.env.FIREBASE_API_KEY;
+    if (apiKey) {
+      try {
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`;
+        const resp = await axios.post(url, { token: customToken, returnSecureToken: true });
+        idToken = resp.data.idToken;
+        refreshToken = resp.data.refreshToken;
+        expiresIn = resp.data.expiresIn; // seconds as string
+      } catch (exchangeErr) {
+        const errAny: any = exchangeErr;
+        console.warn('Failed to exchange custom token for ID token:', errAny?.response?.data || errAny?.message || String(exchangeErr));
+      }
+    }
 
     const response: AuthResponse = {
       success: true,
       message: 'User created successfully',
       user: userProfile,
-      token
+      // prefer returning an ID token (ready-to-use) if available, otherwise return the custom token
+      token: idToken || customToken
     };
+    // include additional token info when available
+    if (idToken) {
+      (response as any).refreshToken = refreshToken;
+      (response as any).expiresIn = expiresIn;
+    }
 
     console.log('Signup successful!'); // Debug log
     res.status(201).json(response);
@@ -101,7 +132,25 @@ router.post('/login', async (req, res) => {
     const userRecord = await admin.auth().getUserByEmail(email);
     
     // Create custom token
-    const token = await admin.auth().createCustomToken(userRecord.uid);
+    const customToken = await admin.auth().createCustomToken(userRecord.uid);
+
+    // Try to exchange custom token for ID token so clients/tests can use it immediately
+    let idToken: string | undefined = undefined;
+    let refreshToken: string | undefined = undefined;
+    let expiresIn: string | undefined = undefined;
+    const apiKey = process.env.FIREBASE_API_KEY;
+    if (apiKey) {
+      try {
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`;
+        const resp = await axios.post(url, { token: customToken, returnSecureToken: true });
+        idToken = resp.data.idToken;
+        refreshToken = resp.data.refreshToken;
+        expiresIn = resp.data.expiresIn;
+      } catch (exchangeErr) {
+        const errAny: any = exchangeErr;
+        console.warn('Failed to exchange custom token for ID token:', errAny?.response?.data || errAny?.message || String(exchangeErr));
+      }
+    }
 
     // Get user profile from Firestore
     const userDoc = await admin.firestore().collection('users').doc(userRecord.uid).get();
@@ -120,8 +169,12 @@ router.post('/login', async (req, res) => {
       success: true,
       message: 'Login successful',
       user: userProfile,
-      token
+      token: idToken || customToken
     };
+    if (idToken) {
+      (response as any).refreshToken = refreshToken;
+      (response as any).expiresIn = expiresIn;
+    }
 
     res.json(response);
 
@@ -144,3 +197,22 @@ router.post('/login', async (req, res) => {
 });
 
 export default router;
+
+// Debug route: decode JWT payload (no verification) to inspect token fields
+// Useful to distinguish custom tokens vs ID tokens when testing.
+router.post('/token-info', (req, res) => {
+  try {
+    const authHeader = (req.headers.authorization || req.body.token || '') as string;
+    let token = authHeader;
+    if (authHeader.startsWith('Bearer ')) token = authHeader.split('Bearer ')[1];
+    if (!token) return res.status(400).json({ success: false, message: 'No token provided' });
+
+    const parts = token.split('.');
+    if (parts.length < 2) return res.status(400).json({ success: false, message: 'Invalid JWT format' });
+
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+    return res.json({ success: true, payload });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: 'Failed to decode token', error: String(err) });
+  }
+});
