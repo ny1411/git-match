@@ -21,7 +21,13 @@ export interface SignupRequest {
     // Profile Details
     age?: number;
     role: string;
-    location: string;
+    // Location can be derived from city + country
+    location?: string | null;
+    city?: string | null;
+    country?: string | null;
+    gender?: string | null;
+    interest?: string | null; // comma-separated list
+    goal?: string | null; // casual | dating | long term | friendship
     aboutMe: string;
     dateOfBirth?: string;
     
@@ -40,7 +46,13 @@ export interface SignupRequest {
     fullName?: string;
     age?: number;
     role?: string;
-    location?: string;
+    // Allow updating individual location parts or the full location
+    location?: string | null;
+    city?: string | null;
+    country?: string | null;
+    gender?: string | null;
+    interest?: string | null; // comma-separated
+    goal?: string | null;
     aboutMe?: string;
     dateOfBirth?: string;
     githubProfileUrl?: string;

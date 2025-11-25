@@ -107,11 +107,29 @@ router.put('/me', verifyToken, async (req: Request, res: Response) => {
       age = calcAge;
     }
 
+    // Construct location from city/country if provided
+    let locationFromParts: string | null | undefined = undefined;
+    const city = (updateData as any).city as string | null | undefined;
+    const country = (updateData as any).country as string | null | undefined;
+    if (city !== undefined || country !== undefined) {
+      // If either key is present in the update payload, build location (allow null to clear)
+      if (city === null && country === null) {
+        locationFromParts = null;
+      } else {
+        const parts: string[] = [];
+        if (city && city.trim() !== '') parts.push(city.trim());
+        if (country && country.trim() !== '') parts.push(country.trim());
+        locationFromParts = parts.length > 0 ? parts.join(', ') : null;
+      }
+    }
+
     // Prepare update object
     const updatedProfile: Partial<UserProfile> = {
       ...updateData,
       profileImage: profileImageUrl,
       age: age,
+      // If location was constructed from city/country, override location field
+      ...(locationFromParts !== undefined ? { location: locationFromParts } : {}),
       updatedAt: new Date().toISOString()
     };
 
