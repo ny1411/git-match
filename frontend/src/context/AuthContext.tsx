@@ -1,9 +1,5 @@
-
-import React, {
-	createContext,
-	useState,
-	type ReactNode,
-} from "react";
+import React, { createContext, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Define the shape of the context data
 interface AuthContextType {
@@ -11,7 +7,7 @@ interface AuthContextType {
 	token: string | null;
 	isLoading: boolean;
 	error: string | null;
-	isProfileComplete: boolean,
+	isProfileComplete: boolean;
 	signup: (data: SignupData) => Promise<AuthResponse>;
 	login: (email: string, password: string) => Promise<AuthResponse>;
 	logout: () => Promise<void>;
@@ -52,12 +48,57 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
-	
-	const [userProfile, setUserProfile] = useState<UserProfile | null>(null); 
+	const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 	const [token, setToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
+
+	const navigate = useNavigate();
+
+	const handleCheckProfileCompletion = async (accessToken?: string) => {
+
+		console.log("Checking profile completion...");		//debug
+		console.log("Using param token:", accessToken);		//debug -> returns correct token
+		console.log("Using state token:", token);		//debug -> returns undefined
+
+		try {
+			const response = await fetch(
+				"http://localhost:3000/api/profile/me",
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			console.log("Profile fetch response status:", response.status);		//debug
+
+			const result: AuthResponse = await response.json();
+			if (!result.success || !result.user) return false;
+
+			if (result.success && result.user) {
+				const profileData = result.user;
+				const requiredFields = [
+					"fullName",
+					"githubProfileUrl",
+					"role",
+					"location",
+					"aboutMe",
+				];
+				const isComplete = requiredFields.every((field) => {
+					const value = (profileData as any)[field];
+					return typeof value === "string" && value.trim() !== "";
+				});
+				setIsProfileComplete(isComplete);
+			}
+		} catch (e: any) {
+			console.error("Error checking profile completion:", e);
+			return false;
+		}
+	};
 
 	// Basic login implementation: set the user data
 	const login = async (
@@ -80,8 +121,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				setIsLoading(false);
 				return result;
 			}
-			console.log("Login successful, token received:", result.token);
+
+			console.log("Login successful, token received:", result.token);		//debug
+
 			setToken(result.token);
+			const isComplete = await handleCheckProfileCompletion(result.token);
+
+			console.log("Is profile complete:", isComplete);		//debug
+
+			if (isComplete) {
+			navigate("/dashboard");
+			} else {
+			navigate("/onboarding");
+			}
 
 			// Fetch the user profile data here after sign-in
 			setIsLoading(false);
