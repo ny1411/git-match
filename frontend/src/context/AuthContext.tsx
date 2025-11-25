@@ -11,6 +11,7 @@ interface AuthContextType {
 	token: string | null;
 	isLoading: boolean;
 	error: string | null;
+	isProfileComplete: boolean,
 	signup: (data: SignupData) => Promise<AuthResponse>;
 	login: (email: string, password: string) => Promise<AuthResponse>;
 	logout: () => Promise<void>;
@@ -56,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	const [token, setToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-
+	const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
 
 	// Basic login implementation: set the user data
 	const login = async (
@@ -139,6 +140,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 		token,
 		isLoading,
 		error,
+		isProfileComplete,
 		signup,
 		login,
 		logout,

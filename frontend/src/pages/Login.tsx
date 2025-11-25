@@ -2,6 +2,7 @@ import { useState, type FC } from "react";
 import { GithubIcon } from "../components/ui/GithubIcon";
 import { InputField } from "../components/ui/InputField";
 import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const Login: FC = () => {
 	const [loginMode, setLoginMode] = useState("sign-up");
@@ -12,6 +13,8 @@ const Login: FC = () => {
 		githubProfileUrl: "",
 		password: "",
 	});
+
+	const navigate = useNavigate();
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -26,6 +29,7 @@ const Login: FC = () => {
 	const handleLogin = async () => {
 		const result = await login(formData.email, formData.password);
 		console.log(result);
+		navigate("/profile");
 	};
 	const handleSignUp = async () => {
 		const dataToSend = {
@@ -36,6 +40,7 @@ const Login: FC = () => {
 		};
 		const result = await signup(dataToSend);
 		console.log(result);
+		navigate("/onboarding");
 	};
 
 	return (

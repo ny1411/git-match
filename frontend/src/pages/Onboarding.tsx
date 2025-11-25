@@ -25,10 +25,8 @@ const RELATIONSHIP_GOALS = [
 	"Friendship",
 ];
 
-// --- Component Definition ---
-
 const Onboarding: FC = () => {
-	const { userProfile, isLoading: authLoading } = useAuth();
+	const { userProfile, isLoading: authLoading, token } = useAuth();
 	const navigate = useNavigate();
 
 	const [currentStep, setCurrentStep] = useState(1);
@@ -68,7 +66,6 @@ const Onboarding: FC = () => {
 	const totalSteps = 3;
 
 	// --- Handlers ---
-
 	const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({
@@ -183,6 +180,7 @@ const Onboarding: FC = () => {
 		}
 	};
 
+	// Reverse geocoding function to get city and country from coordinates
 	const getCityCountryFromCoords = async (lat: number, lng: number) => {
 		try {
 			const res = await fetch(
@@ -254,7 +252,7 @@ const Onboarding: FC = () => {
 	};
 
 	const handleSubmit = async () => {
-		if (authLoading || !userProfile) {
+		if (!userProfile) {
 			setStatus({
 				error: true,
 				message: "User not authenticated. Please log in.",
@@ -293,14 +291,25 @@ const Onboarding: FC = () => {
 
 		// Call Backend API to save data to Firestore
 		try {
-			const response = await fetch("/api/users/profile/onboarding", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					uid: finalData.uid,
-					profileData: finalData,
-				}),
-			});
+			const response = await fetch(
+				"http://localhost:3000/api/profile/me",
+				{
+					// not the real endpoint
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({
+						// 'dob' -> 'dateOfBirth' to match backend's variable name
+						dateOfBirth: finalData.dob,
+						geolocation: finalData.geolocation,
+						genderPreference: finalData.genderPreference,
+						interests: finalData.interests,
+						relationshipGoals: finalData.relationshipGoals,
+					}),
+				}
+			);
 
 			const result = await response.json();
 
