@@ -1,12 +1,46 @@
 import { useState, type FC } from "react";
 import { GithubIcon } from "../components/ui/GithubIcon";
 import { InputField } from "../components/ui/InputField";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const Login: FC = () => {
 	const [loginMode, setLoginMode] = useState("sign-up");
 
-	const handleLogin = async () => {};
-	const handleSignUp = async () => {};
+	const [formData, setFormData] = useState({
+		fullName: "",
+		email: "",
+		githubProfileUrl: "",
+		password: "",
+	});
+
+	const navigate = useNavigate();
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+	};
+
+	const { signup, login } = useAuth();
+
+	const handleLogin = async () => {
+		const result = await login(formData.email, formData.password);
+		console.log(result);
+	};
+	const handleSignUp = async () => {
+		const dataToSend = {
+			fullName: formData.fullName,
+			email: formData.email,
+			githubProfileUrl: formData.githubProfileUrl,
+			password: formData.password,
+		};
+		const result = await signup(dataToSend);
+		console.log(result);
+		navigate("/onboarding");
+	};
 
 	return (
 		<div className="min-h-screen w-full bg-[#0f0a1e] flex items-center justify-center p-4">
@@ -47,10 +81,32 @@ const Login: FC = () => {
 						<div>
 							{/* Form Fields */}
 							<div className="flex-1 flex flex-col justify-center space-y-2 max-w-xs mx-auto w-full">
-								<InputField label="Full Name" />
-								<InputField label="Email" type="email" />
-								<InputField label="Github Profile URL" />
-								<InputField label="Password" type="password" />
+								<InputField
+									label="Full Name"
+									name="fullName"
+									value={formData.fullName}
+									onChange={handleChange}
+								/>
+								<InputField
+									label="Email"
+									type="email"
+									name="email"
+									value={formData.email}
+									onChange={handleChange}
+								/>
+								<InputField
+									label="Github Profile URL"
+									name="githubProfileUrl"
+									value={formData.githubProfileUrl}
+									onChange={handleChange}
+								/>
+								<InputField
+									label="Password"
+									type="password"
+									name="password"
+									value={formData.password}
+									onChange={handleChange}
+								/>
 							</div>
 
 							{/* Action Button */}
@@ -68,8 +124,20 @@ const Login: FC = () => {
 						<div>
 							{/* Form Fields */}
 							<div className="flex-1 flex flex-col justify-center space-y-2 max-w-xs mx-auto w-full">
-								<InputField label="Email" type="email" />
-								<InputField label="Password" type="password" />
+								<InputField
+									label="Email"
+									name="email"
+									type="email"
+									value={formData.email}
+									onChange={handleChange}
+								/>
+								<InputField
+									label="Password"
+									name="password"
+									type="password"
+									value={formData.password}
+									onChange={handleChange}
+								/>
 							</div>
 
 							{/* Action Button */}
