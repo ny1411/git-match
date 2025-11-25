@@ -57,10 +57,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	const navigate = useNavigate();
 
 	const handleCheckProfileCompletion = async (accessToken?: string) => {
+		console.log("Checking profile completion..."); //debug
+		console.log("Using param token:", accessToken); //debug -> returns correct token
+		console.log("Using state token:", token); //debug -> returns undefined
 
-		console.log("Checking profile completion...");		//debug
-		console.log("Using param token:", accessToken);		//debug -> returns correct token
-		console.log("Using state token:", token);		//debug -> returns undefined
+		if (!accessToken) {
+			console.error("No token provided to handleCheckProfileCompletion");
+			return false;
+		}
 
 		try {
 			const response = await fetch(
@@ -74,26 +78,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				}
 			);
 
-			console.log("Profile fetch response status:", response.status);		//debug
+			console.log("Profile fetch response status:", response.status); //debug
 
-			const result: AuthResponse = await response.json();
-			if (!result.success || !result.user) return false;
-
-			if (result.success && result.user) {
-				const profileData = result.user;
-				const requiredFields = [
-					"fullName",
-					"githubProfileUrl",
-					"role",
-					"location",
-					"aboutMe",
-				];
-				const isComplete = requiredFields.every((field) => {
-					const value = (profileData as any)[field];
-					return typeof value === "string" && value.trim() !== "";
-				});
-				setIsProfileComplete(isComplete);
+			if (!response.ok) {
+				console.error("Profile fetch failed:", response.statusText);
+				return false;
 			}
+
+			const result: any = await response.json();
+			console.log("Profile response:", result); //debug
+
+			if (!result.success) return false;
+
+			const profileData = result.profile || result.user;
+			if (!profileData) return false;
+
+			const requiredFields = [
+				"fullName",
+				"githubProfileUrl",
+				"role",
+				"location",
+				"aboutMe",
+			];
+			const isComplete = requiredFields.every((field) => {
+				const value = (profileData as any)[field];
+				return typeof value === "string" && value.trim() !== "";
+			});
+			setIsProfileComplete(isComplete);
+			return isComplete;
 		} catch (e: any) {
 			console.error("Error checking profile completion:", e);
 			return false;
@@ -109,11 +121,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 		setError(null);
 
 		try {
-			const response = await fetch("http://localhost:3000/api/auth/login", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email, password }),
-			});
+			const response = await fetch(
+				"http://localhost:3000/api/auth/login",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ email, password }),
+				}
+			);
 			const result: AuthResponse = await response.json();
 
 			if (!result.success || !result.token) {
@@ -122,17 +137,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				return result;
 			}
 
-			console.log("Login successful, token received:", result.token);		//debug
+			console.log("Login successful, token received:", result.token); //debug
 
 			setToken(result.token);
 			const isComplete = await handleCheckProfileCompletion(result.token);
 
-			console.log("Is profile complete:", isComplete);		//debug
+			console.log("Is profile complete:", isComplete); //debug
 
 			if (isComplete) {
-			navigate("/dashboard");
+				navigate("/dashboard");
 			} else {
-			navigate("/onboarding");
+				navigate("/onboarding");
 			}
 
 			// Fetch the user profile data here after sign-in
@@ -153,11 +168,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
 		try {
 			// Call Express Backend Signup Endpoint
-			const response = await fetch("http://localhost:3000/api/auth/signup", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
-			});
+			const response = await fetch(
+				"http://localhost:3000/api/auth/signup",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(data),
+				}
+			);
 
 			const result: AuthResponse = await response.json();
 
