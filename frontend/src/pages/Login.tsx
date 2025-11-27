@@ -24,7 +24,7 @@ const Login: FC = () => {
 		}));
 	};
 
-	const { signup, login } = useAuth();
+	const { signup, login, githubVerificationURL } = useAuth();
 
 	const handleLogin = async () => {
 		const result = await login(formData.email, formData.password);
@@ -40,6 +40,11 @@ const Login: FC = () => {
 		const result = await signup(dataToSend);
 		console.log(result);
 		navigate("/onboarding");
+	};
+
+	const handleGithubVerification = async () => {
+		const result = await githubVerificationURL();
+		console.log(result);
 	};
 
 	return (
@@ -94,12 +99,21 @@ const Login: FC = () => {
 									value={formData.email}
 									onChange={handleChange}
 								/>
-								<InputField
-									label="Github Profile URL"
-									name="githubProfileUrl"
-									value={formData.githubProfileUrl}
-									onChange={handleChange}
-								/>
+								<div className="flex items-start gap-4">
+									<InputField
+										label="Github Profile URL"
+										name="githubProfileUrl"
+										value={formData.githubProfileUrl}
+										onChange={handleChange}
+									/>
+									<button
+										onClick={handleGithubVerification}
+										className="mt-3 bg-linear-to-tr from-[#a82ee6] to-[#7125d8] bg-clip-text 
+										text-lg font-bold text-transparent cursor-pointer hover:underline "
+									>
+										Verify
+									</button>
+								</div>
 								<InputField
 									label="Password"
 									type="password"
