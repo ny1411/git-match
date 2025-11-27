@@ -4,12 +4,15 @@ import { useNavigate } from "react-router-dom";
 // Define the shape of the context data
 interface AuthContextType {
 	userProfile: UserProfile | null;
+	isGithubProfileVerified: GithubVerificationStatus | null;
 	token: string | null;
 	isLoading: boolean;
 	error: string | null;
 	isProfileComplete: boolean;
 	signup: (data: SignupData) => Promise<AuthResponse>;
 	login: (email: string, password: string) => Promise<AuthResponse>;
+	githubVerificationURL: () => Promise<AuthResponse>;
+	githubVerificationStatus: () => Promise<AuthResponse>;
 	logout: () => Promise<void>;
 }
 
@@ -23,6 +26,17 @@ interface UserProfile {
 	aboutMe: string;
 	createdAt: Date;
 	updatedAt: Date;
+}
+
+interface GithubVerificationStatus {
+	verified: boolean | null;
+	message: "Pending" | "Verified" | "Not Verified";
+}
+
+interface UserGithubProfile {
+	username: string | null;
+	profileUrl: string | null;
+	verifiedAt: Date | null;
 }
 
 interface SignupData {
@@ -49,6 +63,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+	const [isGithubProfileVerified, setIsGithubProfileVerified] =
+		useState<GithubVerificationStatus>({
+			verified: null,
+			message: "Pending",
+		});
+	const [userGithubProfile, setUserGithubProfile] = useState<UserGithubProfile>({
+			username: null,
+			profileUrl: null,
+			verifiedAt: null,
+	})
 	const [token, setToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -198,6 +222,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 		}
 	};
 
+	const githubVerificationURL = async (): Promise<AuthResponse> => {
+		try {
+			const response = await fetch(
+				"http://localhost:3000/api/github-verify/auth-url",
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+					},
+				}
+			);
+			const result = await response.json();
+			return result;
+		} catch (e: any) {
+			console.log("Github verification failed:", e);
+
+			return { success: false, message: e?.message };
+		}
+	};
+
+	const githubVerificationStatus = async (): Promise<AuthResponse> => {
+		try {
+			const response = await fetch(
+				"http://localhost:3000/api/github-verify/status",
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+					},
+				}
+			);
+			const result = await response.json();
+
+			if (result.success && result.isGithubVerified) {
+				setIsGithubProfileVerified({
+					verified: true,
+					message: "Verified",
+				});
+				setUserGithubProfile({
+					username: result.githubProfile.username,
+					profileUrl: result.githubProfile.profileUrl,
+					verifiedAt: new Date(result.githubProfile.verifiedAt),
+				})
+			}
+			return result;
+		} catch (e: any) {
+			console.log("Github verification status check failed:", e);
+			return { success: false, message: e?.message };
+		}
+	};
+
 	// Logout implementation: clear the user
 	const logout = async () => {
 		setIsLoading(true);
@@ -207,12 +282,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
 	const value: AuthContextType = {
 		userProfile,
+		isGithubProfileVerified,
 		token,
 		isLoading,
 		error,
 		isProfileComplete,
 		signup,
 		login,
+		githubVerificationURL,
+		githubVerificationStatus,
 		logout,
 	};
 
