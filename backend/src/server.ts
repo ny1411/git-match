@@ -9,6 +9,7 @@ dotenv.config();
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import githubVerifyRoutes from './routes/githubVerify.js';
+import matchingRoutes from './routes/matching.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -20,6 +21,7 @@ app.use(express.json()); // Increase limit for base64 images
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/github-verify', githubVerifyRoutes);
+app.use('/api/matching', matchingRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
