@@ -28,3 +28,5 @@ backend/dist/
 
 # VS Code settings (optional)
 .vscode/
+backend/firebase-service-account.json
+backend/src/firebase-service-account.json
