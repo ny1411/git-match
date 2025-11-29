@@ -1,5 +1,3 @@
-import {} from "react";
-
 import { useState, type FC, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
