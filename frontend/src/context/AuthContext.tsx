@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, type ReactNode } from "react";
+import React, { createContext, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Define the shape of the context data
@@ -76,18 +76,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
 
 	const navigate = useNavigate();
-
-	useEffect(() => {
-		const listener = (event: any) => {
-			if (event.data?.type === "GITHUB_VERIFICATION_SUCCESS") {
-				console.log("GitHub verification completed");
-				githubVerificationStatus(token);
-			}
-		};
-
-		window.addEventListener("message", listener);
-		return () => window.removeEventListener("message", listener);
-	}, []);
 
 	const handleCheckProfileCompletion = async (accessToken?: string) => {
 		console.log("Checking profile completion..."); //debug
@@ -219,7 +207,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			}
 
 			if (result.success && result.token) {
-				console.log("Signup successful, token received:", result.token); //debug
+				// console.log("Signup successful, token received:", result.token); //debug
 				setToken(result.token);
 				setUserProfile(result.user || null); // Use the profile data returned by the backend
 				setIsLoading(false);
@@ -227,19 +215,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				const githubVerificationResult = await githubVerificationURL(
 					result.token
 				);
+				console.log(githubVerificationResult);
 				if (
 					githubVerificationResult.success &&
 					githubVerificationResult.authUrl
 				) {
 					window.open(githubVerificationResult.authUrl, "_blank");
+					// console.log("Verification URL response: ");
+					return { success: true, message: "Signup successful!" };
 				}
-				console.log("Verification URL response: ");
-				console.log(githubVerificationResult);
 			}
-			return { success: true, message: "Signup successful!" };
+			return { success: false, message: "Github verification failed." };
 		} catch (e: any) {
-			console.error("Signup failed:", e);
-			const msg = e.message || "An unexpected error occurred.";
+			// console.error("Signup failed:", e);
+			const msg = e.message || "Signup failed.";
 			setError(msg);
 			setIsLoading(false);
 			return { success: false, message: msg };
@@ -262,31 +251,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			);
 			const result = await response.json();
 
-			console.log("Github verification URL started"); //debug
-			console.log("Using state token:", accessToken); //debug
-			console.log(
-				"Github verification URL response status:",
-				response.status
-			); //debug
+			// console.log("Github verification URL started"); //debug
+			// console.log("Using state token:", accessToken); //debug
+			// console.log(
+			// 	"Github verification URL response status:",
+			// 	response.status
+			// ); //debug
 
-			console.log("Github verification URL response:", result); //debug
+			// console.log("Github verification URL response:", result); //debug
 
-			if (result.success && result.authUrl) {
-				console.log(
-					"Github Verification URL:",
-					result.githubVerificationURL
-				);
+			// const status = await githubVerificationStatus(accessToken);
+			// console.log("Github Verification Status:", status);
 
-				const status = await githubVerificationStatus(accessToken);
-				console.log("Github Verification Status:", status);
-				if (status.success) {
-					setIsGithubProfileVerified(true);
-					navigate("/onboarding");
-				}
+			if (result.success) {
+				setIsGithubProfileVerified(true);
+				return {
+					success: result.success,
+					authUrl: result.authUrl,
+					message: "Github profile verified.",
+				};
 			}
-			return { success: true, message: "Github profile verified." };
+			return { success: result.success, message: result.message };
 		} catch (e: any) {
-			console.log("Github verification failed:", e);
+			// console.log("Github verification failed:", e);
+			setError(e?.message || "Github verification failed.");
 			return { success: false, message: e?.message };
 		}
 	};
@@ -307,14 +295,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			);
 			const result = await response.json();
 
-			console.log("Github verification URL started"); //debug
-			console.log("Using state token:", accessToken); //debug
-			console.log(
-				"Github verification URL response status:",
-				response.status
-			); //debug
+			// console.log("Github verification status started"); //debug
+			// console.log("Using state token:", accessToken); //debug
+			// console.log(
+			// 	"Github verification status response status:",
+			// 	response.status
+			// ); //debug
 
-			console.log("Github verification URL response:", result); //debug
+			console.log("Github verification status response:", result); //debug
 
 			if (result.success && result.isGithubVerified) {
 				setIsGithubProfileVerified(true);
