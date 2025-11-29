@@ -3,12 +3,6 @@ import rateLimit from 'express-rate-limit';
 import admin from '../firebase/admin.js';
 import { StorageService } from '../utils/storage.js';
 import { UpdateProfileRequest, ProfileResponse, UserProfile } from '../types/user.js';
-import { Router, Request, Response, NextFunction } from "express";
-import {
-	UpdateProfileRequest,
-	ProfileResponse,
-	UserProfile,
-} from "../types/user.js";
 
 interface AuthenticatedRequest extends Request {
 	user?: {

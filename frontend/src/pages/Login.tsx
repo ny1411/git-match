@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 
 const Login: FC = () => {
 	const [loginMode, setLoginMode] = useState("sign-up");
-
 	const [formData, setFormData] = useState({
 		fullName: "",
 		email: "",
@@ -37,9 +36,12 @@ const Login: FC = () => {
 			githubProfileUrl: formData.githubProfileUrl,
 			password: formData.password,
 		};
-		const result = await signup(dataToSend);
-		console.log(result);
-		navigate("/onboarding");
+		const signupResult = await signup(dataToSend);
+		console.log(signupResult);
+
+		if (signupResult.success) {
+			navigate("/onboarding");
+		}
 	};
 
 	return (
@@ -94,12 +96,14 @@ const Login: FC = () => {
 									value={formData.email}
 									onChange={handleChange}
 								/>
-								<InputField
-									label="Github Profile URL"
-									name="githubProfileUrl"
-									value={formData.githubProfileUrl}
-									onChange={handleChange}
-								/>
+								<div className="flex items-start gap-4">
+									<InputField
+										label="Github Profile URL"
+										name="githubProfileUrl"
+										value={formData.githubProfileUrl}
+										onChange={handleChange}
+									/>
+								</div>
 								<InputField
 									label="Password"
 									type="password"
