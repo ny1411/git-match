@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 
 const Login: FC = () => {
 	const [loginMode, setLoginMode] = useState("sign-up");
-
 	const [formData, setFormData] = useState({
 		fullName: "",
 		email: "",
@@ -24,7 +23,7 @@ const Login: FC = () => {
 		}));
 	};
 
-	const { signup, login, githubVerificationURL } = useAuth();
+	const { signup, login } = useAuth();
 
 	const handleLogin = async () => {
 		const result = await login(formData.email, formData.password);
@@ -37,14 +36,12 @@ const Login: FC = () => {
 			githubProfileUrl: formData.githubProfileUrl,
 			password: formData.password,
 		};
-		const result = await signup(dataToSend);
-		console.log(result);
-		navigate("/onboarding");
-	};
+		const signupResult = await signup(dataToSend);
+		console.log(signupResult);
 
-	const handleGithubVerification = async () => {
-		const result = await githubVerificationURL();
-		console.log(result);
+		if (signupResult.success) {
+			navigate("/onboarding");
+		}
 	};
 
 	return (
@@ -106,13 +103,6 @@ const Login: FC = () => {
 										value={formData.githubProfileUrl}
 										onChange={handleChange}
 									/>
-									<button
-										onClick={handleGithubVerification}
-										className="mt-3 bg-linear-to-tr from-[#a82ee6] to-[#7125d8] bg-clip-text 
-										text-lg font-bold text-transparent cursor-pointer hover:underline "
-									>
-										Verify
-									</button>
 								</div>
 								<InputField
 									label="Password"
