@@ -135,20 +135,28 @@ router.put("/me", verifyToken, async (req: Request, res: Response) => {
 			}
 		}
 
-		// Calculate age from dateOfBirth if provided and age not explicitly set
+		// Handle dob/dateOfBirth and calculate age if needed
 		let age = (updateData as any).age as number | undefined;
-		if (updateData.dateOfBirth && (age === undefined || age === null)) {
-			const dob = new Date(updateData.dateOfBirth);
-			const today = new Date();
-			let calcAge = today.getFullYear() - dob.getFullYear();
-			const m = today.getMonth() - dob.getMonth();
-			if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-				calcAge--;
+		// Frontend may send `dob` as Date/string or `dateOfBirth` as string
+		const dobInput = (updateData as any).dob ?? (updateData as any).dateOfBirth;
+		let dobIso: string | undefined = undefined;
+		if (dobInput !== undefined && dobInput !== null) {
+			const dob = new Date(dobInput);
+			if (!isNaN(dob.getTime())) {
+				dobIso = dob.toISOString();
 			}
-			age = calcAge;
+			if ((age === undefined || age === null) && dobIso) {
+				const today = new Date();
+				let calcAge = today.getFullYear() - dob.getFullYear();
+				const m = today.getMonth() - dob.getMonth();
+				if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+					calcAge--;
+				}
+				age = calcAge;
+			}
 		}
 
-		// Construct location from city/country if provided
+		// Construct location from city/country or geolocation if provided
 		let locationFromParts: string | null | undefined = undefined;
 		const city = (updateData as any).city as string | null | undefined;
 		const country = (updateData as any).country as
@@ -156,24 +164,49 @@ router.put("/me", verifyToken, async (req: Request, res: Response) => {
 			| null
 			| undefined;
 		if (city !== undefined || country !== undefined) {
-			// If either key is present in the update payload, build location (allow null to clear)
 			if (city === null && country === null) {
 				locationFromParts = null;
 			} else {
 				const parts: string[] = [];
 				if (city && city.trim() !== "") parts.push(city.trim());
-				if (country && country.trim() !== "")
-					parts.push(country.trim());
+				if (country && country.trim() !== "") parts.push(country.trim());
 				locationFromParts = parts.length > 0 ? parts.join(", ") : null;
 			}
 		}
 
+		// Normalize geolocation object if provided
+		const geo = (updateData as any).geolocation as
+			| { lat?: number | null; lng?: number | null }
+			| undefined
+			| null;
+		const geolocationField = geo !== undefined ? geo : undefined;
+
 		// Prepare update object
+		// Map new frontend fields to backend profile shape
 		const updatedProfile: Partial<UserProfile> = {
 			...updateData,
+			// store calculated ISO dob if present
+			...(dobIso ? { dateOfBirth: dobIso } : {}),
 			profileImage: profileImageUrl,
 			age: age,
-			// If location was constructed from city/country, override location field
+			// geolocation nested object
+			...(geolocationField !== undefined ? { geolocation: geolocationField } : {}),
+			// map interests array to both `interests` and legacy comma `interest`
+			...(updateData && (updateData as any).interests
+				? { interests: (updateData as any).interests }
+				: {}),
+			...(updateData && (updateData as any).interests
+				? { interest: (updateData as any).interests.join(",") }
+				: {}),
+			// map relationshipGoals -> goal (legacy)
+			...(updateData && (updateData as any).relationshipGoals
+				? { goal: (updateData as any).relationshipGoals }
+				: {}),
+			// genderPreference stored if provided
+			...(updateData && (updateData as any).genderPreference
+				? { genderPreference: (updateData as any).genderPreference }
+				: {}),
+			// retain location override
 			...(locationFromParts !== undefined
 				? { location: locationFromParts }
 				: {}),

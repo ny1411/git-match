@@ -25,9 +25,18 @@ export interface SignupRequest {
     location?: string | null;
     city?: string | null;
     country?: string | null;
+    // New frontend fields
+    geolocation?: {
+      lat?: number | null;
+      lng?: number | null;
+    } | null;
     gender?: string | null;
-    interest?: string | null; // comma-separated list
-    goal?: string | null; // casual | dating | long term | friendship
+    genderPreference?: string | null;
+    interests?: string[] | null;
+    otherInterest?: string | null;
+    relationshipGoals?: string | null;
+    interest?: string | null; // legacy: comma-separated list
+    goal?: string | null; // legacy
     aboutMe: string;
     dateOfBirth?: string;
     
@@ -51,7 +60,15 @@ export interface SignupRequest {
     city?: string | null;
     country?: string | null;
     gender?: string | null;
-    interest?: string | null; // comma-separated
+    // New frontend-friendly fields
+    dob?: string | Date | null;
+    geolocation?: { lat?: number | null; lng?: number | null } | null;
+    genderPreference?: string | null;
+    interests?: string[] | null;
+    otherInterest?: string | null;
+    relationshipGoals?: string | null;
+
+    interest?: string | null; // legacy: comma-separated
     goal?: string | null;
     aboutMe?: string;
     dateOfBirth?: string;
