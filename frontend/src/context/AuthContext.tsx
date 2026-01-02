@@ -1,6 +1,9 @@
 import React, { createContext, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { auth } from "../config/firebase";
+import { signInWithCustomToken } from "firebase/auth";
+
 // Define the shape of the context data
 interface AuthContextType {
 	userProfile: UserProfile | null;
@@ -78,12 +81,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 	const navigate = useNavigate();
 
 	const handleCheckProfileCompletion = async (accessToken?: string) => {
-		console.log("Checking profile completion..."); //debug
-		console.log("Using param token:", accessToken); //debug -> returns correct token
-		console.log("Using state token:", token); //debug -> returns undefined
+		// console.log("Checking profile completion..."); //debug
+		// console.log("Using param token:", accessToken); //debug -> returns correct token
+		// console.log("Using state token:", token); //debug -> returns undefined
 
 		if (!accessToken) {
-			console.error("No token provided to handleCheckProfileCompletion");
+			// console.error("No token provided to handleCheckProfileCompletion");
 			return false;
 		}
 
@@ -99,7 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				}
 			);
 
-			console.log("Profile fetch response status:", response.status); //debug
+			// console.log("Profile fetch response status:", response.status); //debug
 
 			if (!response.ok) {
 				console.error("Profile fetch failed:", response.statusText);
@@ -107,7 +110,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			}
 
 			const result: any = await response.json();
-			console.log("Profile response:", result); //debug
+			// console.log("Profile response:", result); //debug
 
 			if (!result.success) return false;
 
@@ -158,12 +161,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				return result;
 			}
 
-			console.log("Login successful, token received:", result.token); //debug
+			if (result.success && result.token) {
+				await signInWithCustomToken(auth, result.token);
+				console.log("tried customtoken sign in")
+			}
+
+			// console.log("Login successful, token received:", result.token); //debug
 
 			setToken(result.token);
 			const isComplete = await handleCheckProfileCompletion(result.token);
 
-			console.log("Is profile complete:", isComplete); //debug
+			// console.log("Is profile complete:", isComplete); //debug
 
 			if (isComplete) {
 				navigate("/dashboard");
@@ -207,6 +215,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			}
 
 			if (result.success && result.token) {
+				await signInWithCustomToken(auth, result.token);
+
 				// console.log("Signup successful, token received:", result.token); //debug
 				setToken(result.token);
 				setUserProfile(result.user || null); // Use the profile data returned by the backend
@@ -215,7 +225,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				const githubVerificationResult = await githubVerificationURL(
 					result.token
 				);
-				console.log(githubVerificationResult);
+				// console.log(githubVerificationResult);
 				if (
 					githubVerificationResult.success &&
 					githubVerificationResult.authUrl
