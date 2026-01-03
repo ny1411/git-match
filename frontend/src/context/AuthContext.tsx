@@ -10,6 +10,7 @@ interface AuthContextType {
 	userGithubProfile: UserGithubProfile | null;
 	isGithubProfileVerified: boolean | null;
 	token: string | null;
+	firebaseToken: string | null;
 	isLoading: boolean;
 	error: string | null;
 	isProfileComplete: boolean;
@@ -49,7 +50,8 @@ interface AuthResponse {
 	success: boolean;
 	message: string;
 	user?: UserProfile;
-	token?: string; // Firebase Custom Token
+	token?: string;
+	firebaseToken?: string;
 	authUrl?: string;
 	isGithubVerified?: boolean;
 	githubProfile?: UserGithubProfile;
@@ -74,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			verifiedAt: null,
 		});
 	const [token, setToken] = useState<string | null>(null);
+	const [firebaseToken, setFirebaseToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isProfileComplete, setIsProfileComplete] = useState<boolean>(false);
@@ -161,9 +164,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				return result;
 			}
 
-			if (result.success && result.token) {
-				await signInWithCustomToken(auth, result.token);
-				console.log("tried customtoken sign in")
+			if (result.success && result.token && result.firebaseToken) {
+				await signInWithCustomToken(auth, result.firebaseToken);
 			}
 
 			// console.log("Login successful, token received:", result.token); //debug
@@ -214,11 +216,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				return result;
 			}
 
-			if (result.success && result.token) {
-				await signInWithCustomToken(auth, result.token);
+			if (result.success && result.token && result.firebaseToken) {
+				await signInWithCustomToken(auth, result.firebaseToken);
 
 				// console.log("Signup successful, token received:", result.token); //debug
 				setToken(result.token);
+				setFirebaseToken(result.firebaseToken);
 				setUserProfile(result.user || null); // Use the profile data returned by the backend
 				setIsLoading(false);
 
@@ -347,6 +350,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 		userGithubProfile,
 		isGithubProfileVerified,
 		token,
+		firebaseToken,
 		isLoading,
 		error,
 		isProfileComplete,
