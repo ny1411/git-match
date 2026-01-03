@@ -68,6 +68,11 @@ router.post("/signup", async (req, res) => {
 			.doc(userRecord.uid)
 			.set(userProfile);
 
+		// Generate Custom Token for Frontend SDK direct access
+		const firebaseToken = await admin
+			.auth()
+			.createCustomToken(userRecord.uid);
+
 		console.log("Creating custom token..."); // Debug log
 
 		// Create custom token for client-side authentication
@@ -109,6 +114,7 @@ router.post("/signup", async (req, res) => {
 			user: userProfile,
 			// prefer returning an ID token (ready-to-use) if available, otherwise return the custom token
 			token: idToken || customToken,
+			firebaseToken: firebaseToken,
 		};
 		// include additional token info when available
 		if (idToken) {
@@ -194,11 +200,14 @@ router.post("/login", async (req, res) => {
 
 			const userProfile = userDoc.data() as UserProfile;
 
+			const firebaseToken = await admin.auth().createCustomToken(userId);
+
 			const response: AuthResponse = {
 				success: true,
 				message: "Login successful",
 				user: userProfile,
 				token: idToken,
+				firebaseToken: firebaseToken,
 			};
 			if (resp.data.refreshToken) {
 				(response as any).refreshToken = resp.data.refreshToken;
@@ -267,12 +276,10 @@ router.post("/token-info", (req, res) => {
 		);
 		return res.json({ success: true, payload });
 	} catch (err) {
-		return res
-			.status(400)
-			.json({
-				success: false,
-				message: "Failed to decode token",
-				error: String(err),
-			});
+		return res.status(400).json({
+			success: false,
+			message: "Failed to decode token",
+			error: String(err),
+		});
 	}
 });
