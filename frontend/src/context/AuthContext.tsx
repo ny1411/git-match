@@ -165,6 +165,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 			}
 
 			if (result.success && result.token && result.firebaseToken) {
+				setUserProfile(result.user || null);
+				setFirebaseToken(result.firebaseToken);
 				await signInWithCustomToken(auth, result.firebaseToken);
 			}
 
@@ -218,6 +220,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
 			if (result.success && result.token && result.firebaseToken) {
 				await signInWithCustomToken(auth, result.firebaseToken);
+
+				// console.log(result); //debug
 
 				// console.log("Signup successful, token received:", result.token); //debug
 				setToken(result.token);
