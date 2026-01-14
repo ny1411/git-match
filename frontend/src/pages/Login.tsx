@@ -28,9 +28,7 @@ const Login: FC = () => {
 	const handleLogin = async () => {
 		const result = await login(formData.email, formData.password);
 		console.log(result);
-		if (result.success == true) {
-			navigate("/gallery");
-		}
+		
 	};
 	const handleSignUp = async () => {
 		const dataToSend = {

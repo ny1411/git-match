@@ -22,6 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Trash2, Star, GripVertical, ImagePlus, X } from "lucide-react";
+import { getUserGallery, saveUserGallery } from "../services/galleryService";
 
 // --- Types ---
 interface GalleryImage {
@@ -128,7 +129,7 @@ const SortableImageItem = ({
 // --- Main Component ---
 
 const Gallery: FC = () => {
-	// const { userProfile, firebaseUser } = useAuth(); // Assuming auth context provides these
+	const { firebaseToken, userProfile, isLoading: authLoading } = useAuth(); // Assuming auth context provides these
 	const navigate = useNavigate();
 
 	const [images, setImages] = useState<GalleryImage[]>([]);
@@ -147,12 +148,34 @@ const Gallery: FC = () => {
 		})
 	);
 
+	if (authLoading) return <div>Loading...</div>;
+
 	// --- Fetch Gallery on Mount ---
 	useEffect(() => {
-		// Mock Fetch - Replace with: fetch('/api/gallery')
-		// For now, we start empty or load from local/mock if needed
-		// Assuming backend returns an array of images in the user profile
-	}, []);
+		const loadGallery = async () => {
+			// Ensure we have a user ID and firebaseToken before fetching
+			if (userProfile?.uid && firebaseToken) {
+				try {
+					console.log("Loading gallery for user:", userProfile.uid);
+					const savedImages = await getUserGallery(userProfile.uid);
+					// Update state with images from Firestore
+					setImages(savedImages);
+					console.log("Gallery loaded successfully:", savedImages);
+				} catch (error) {
+					console.error("Failed to load gallery:", error);
+				}
+			} else {
+				console.log(
+					"Waiting for user profile and firebase token...",
+					firebaseToken ? "Token ready" : "Token pending"
+				);
+			}
+		};
+
+		if (!authLoading && userProfile?.uid && firebaseToken) {
+			loadGallery();
+		}
+	}, [firebaseToken, userProfile?.uid, authLoading]);
 
 	// --- Handlers ---
 
@@ -235,12 +258,14 @@ const Gallery: FC = () => {
 		setLoading(true);
 		setSaveStatus("Saving...");
 
-		// NOTE: In a real app, you might upload images to Storage individually
-		// and only save URLs here. Since the prompt asks for Base64 flows:
 		try {
-			// Mock Backend Call
-			// await fetch('/api/gallery', { method: 'POST', body: JSON.stringify({ images }) ... })
-
+			if (!userProfile) {
+				throw new Error("User not authenticated.");
+			}
+			saveUserGallery(
+				userProfile.uid,
+				images.map((img) => img.src)
+			);
 			await new Promise((resolve) => setTimeout(resolve, 1500)); // Fake delay
 			setSaveStatus("Gallery saved successfully!");
 			setTimeout(() => setSaveStatus(null), 3000);

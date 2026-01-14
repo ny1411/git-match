@@ -168,7 +168,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 				await signInWithCustomToken(auth, result.firebaseToken);
 			}
 
-			// console.log("Login successful, token received:", result.token); //debug
+			console.log("Login successful", result); //debug
 
 			setToken(result.token);
 			const isComplete = await handleCheckProfileCompletion(result.token);
