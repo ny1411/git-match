@@ -262,10 +262,7 @@ const Gallery: FC = () => {
 			if (!userProfile) {
 				throw new Error("User not authenticated.");
 			}
-			saveUserGallery(
-				userProfile.uid,
-				images.map((img) => img.src)
-			);
+			saveUserGallery(userProfile.uid, images);
 			await new Promise((resolve) => setTimeout(resolve, 1500)); // Fake delay
 			setSaveStatus("Gallery saved successfully!");
 			setTimeout(() => setSaveStatus(null), 3000);
