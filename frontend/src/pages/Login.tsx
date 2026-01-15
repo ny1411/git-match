@@ -28,6 +28,7 @@ const Login: FC = () => {
 	const handleLogin = async () => {
 		const result = await login(formData.email, formData.password);
 		console.log(result);
+		
 	};
 	const handleSignUp = async () => {
 		const dataToSend = {

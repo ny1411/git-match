@@ -13,6 +13,7 @@ import Profile from "../pages/Profile";
 import Matches from "../pages/Matches";
 import Chat from "../pages/Chat";
 import AuthCallback from "../pages/AuthCallback";
+import Gallery from "../pages/Gallery";
 
 const AppRouter: React.FC = () => {
 	return (
@@ -31,6 +32,7 @@ const AppRouter: React.FC = () => {
 			<Route path="/onboarding" element={<Onboarding />} />
 			<Route path="/dashboard" element={<Dashboard />} />
 			<Route path="/profile" element={<Profile />} />
+			<Route path="/gallery" element={<Gallery />} />
 			<Route path="/matches" element={<Matches />} />
 			<Route path="/chat" element={<Chat />} />
 
