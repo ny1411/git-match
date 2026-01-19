@@ -4,15 +4,20 @@ import { getDominantColors } from "../components/utils/colorUtils";
 import type { Profile } from "../types/profile";
 import SwipeCard from "../components/match/SwipeCard";
 import { MOCK_PROFILES } from "../data/mockProfile";
+import { CustomButton } from "../components/ui/CustomButton";
+import { ArrowLeft, MapPin, Settings, UserRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
 	const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES);
 	const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(
-		null
+		null,
 	);
 	const [gradient, setGradient] = useState<string>(
-		"linear-gradient(135deg, #1a1a1a 0%, #000000 100%)"
+		"linear-gradient(135deg, #1a1a1a 0%, #000000 100%)",
 	);
+
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (!profiles.length) return;
@@ -51,6 +56,8 @@ const Dashboard: React.FC = () => {
 			cancelled = true;
 		};
 	}, [profiles]);
+
+	const handleOpenLocationUpdateModal = () => {};
 
 	// Swipe Handlers
 	const handleSwipe = (direction: "left" | "right") => {
@@ -91,12 +98,51 @@ const Dashboard: React.FC = () => {
 
 	return (
 		<div
-			className="h-screen w-full overflow-hidden flex flex-col items-center justify-center relative transition-colors duration-700 ease-in-out"
+			className="h-screen w-screen overflow-hidden flex flex-col items-center justify-center relative transition-colors duration-700 ease-in-out"
 			style={{ background: gradient }}
 		>
 			{/* Background Overlay for better text contrast */}
 			<div className="absolute inset-0 bg-black/20 backdrop-blur-[60px] z-0"></div>
 
+			<div className="absolute top-10 flex items-center justify-between w-full px-12 z-10">
+				<div>
+					<CustomButton
+						onClick={() => {
+							navigate("/");
+						}}
+						className="bg-white/10 text-white cursor-pointer"
+					>
+						<ArrowLeft />
+					</CustomButton>
+				</div>
+				<div className="w-fit">
+					<CustomButton
+						onClick={handleOpenLocationUpdateModal}
+						className="w-full flex items-center justify-center gap-2 px-4 bg-white/10 text-white hover:bg-green-500/20 hover:border-green-500/50 hover:text-green-400 cursor-pointer"
+					>
+						<MapPin />
+						London
+					</CustomButton>
+				</div>
+				<div className="flex gap-4">
+					<CustomButton
+						onClick={() => {
+							navigate("/settings");
+						}}
+						className="bg-white/10 text-white hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 cursor-pointer"
+					>
+						<Settings />
+					</CustomButton>
+					<CustomButton
+						onClick={() => {
+							navigate("/profile");
+						}}
+						className="bg-white/10 text-white hover:bg-blue-500/20 hover:border-blue-500/50 hover:text-blue-400 cursor-pointer"
+					>
+						<UserRound />
+					</CustomButton>
+				</div>
+			</div>
 			<div className="relative w-full max-w-sm md:max-w-md h-[70vh] z-10 flex items-center justify-center">
 				<AnimatePresence custom={exitDirection}>
 					{profiles.length > 0 ? (
