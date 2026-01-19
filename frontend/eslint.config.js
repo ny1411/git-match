@@ -6,21 +6,21 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-    {
-        ignores: ['node_modules', 'dist', 'build', '.env', '.vscode'],
+  {
+    ignores: ['node_modules', 'dist', 'build', '.env', '.vscode'],
+  },
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
     },
-    globalIgnores(['dist']),
-    {
-        files: ['**/*.{ts,tsx}'],
-        extends: [
-            js.configs.recommended,
-            tseslint.configs.recommended,
-            reactHooks.configs['recommended-latest'],
-            reactRefresh.configs.vite,
-        ],
-        languageOptions: {
-            ecmaVersion: 2020,
-            globals: globals.browser,
-        },
-    },
+  },
 ]);
