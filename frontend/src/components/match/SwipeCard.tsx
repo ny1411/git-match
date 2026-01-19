@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Heart, MapPin, MessageCircle, X } from "lucide-react";
 import type { Profile } from "../../types/profile";
+import { CustomButton } from "../ui/CustomButton";
 
 const SwipeCard = ({
 	profile,
@@ -72,29 +73,29 @@ const SwipeCard = ({
 				{/* Right Side: Action Buttons (Floating) */}
 				<div className="flex flex-col gap-4 mb-2">
 					{/* Comment Button */}
-					<button className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-lg hover:scale-110">
+					<CustomButton className="bg-white/10 text-white hover:bg-blue-600/70 ">
 						<MessageCircle size={22} />
-					</button>
+					</CustomButton>
 					{/* Like Button */}
-					<button
+					<CustomButton
 						onClick={() => {
 							x.set(200);
 							onSwipe("right");
 						}}
-						className="w-12 h-12 rounded-full bg-linear-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/40 hover:scale-110 transition-all"
+						className="bg-linear-to-tr from-pink-500 to-purple-600 text-white shadow-lg shadow-purple-500/40"
 					>
 						<Heart size={22} fill="white" />
-					</button>
+					</CustomButton>
 					{/* Dismiss Button */}
-					<button
+					<CustomButton
 						onClick={() => {
 							x.set(-200);
 							onSwipe("left");
 						}}
-						className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 transition-all shadow-lg hover:scale-110"
+						className="bg-black/40 text-white  hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 shadow-lg"
 					>
 						<X size={24} />
-					</button>
+					</CustomButton>
 				</div>
 			</div>
 		</motion.div>
