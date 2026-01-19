@@ -22,10 +22,10 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/github-verify', githubVerifyRoutes);
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'GitMatch Backend is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
