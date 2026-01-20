@@ -16,11 +16,11 @@ const router = Router();
 const verifyToken = async (req: any, res: any, next: any) => {
   try {
     const token = req.headers.authorization?.split('Bearer ')[1];
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'No token provided'
+        message: 'No token provided',
       });
     }
 
@@ -31,7 +31,7 @@ const verifyToken = async (req: any, res: any, next: any) => {
     console.error('Token verification error:', error);
     return res.status(401).json({
       success: false,
-      message: 'Invalid token'
+      message: 'Invalid token',
     });
   }
 };
@@ -39,11 +39,11 @@ const verifyToken = async (req: any, res: any, next: any) => {
 // Endpoint to start GitHub OAuth flow
 router.get('/auth-url', verifyToken, (req, res) => {
   const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-  
+
   if (!GITHUB_CLIENT_ID) {
     return res.status(500).json({
       success: false,
-      message: 'GitHub OAuth not configured on server'
+      message: 'GitHub OAuth not configured on server',
     });
   }
 
@@ -56,7 +56,7 @@ router.get('/auth-url', verifyToken, (req, res) => {
   res.json({
     success: true,
     authUrl,
-    message: 'Use this URL to authenticate with GitHub'
+    message: 'Use this URL to authenticate with GitHub',
   });
 });
 
@@ -69,7 +69,7 @@ router.get('/callback', async (req, res) => {
     if (!code || !userId) {
       return res.status(400).json({
         success: false,
-        message: 'Missing authorization code or state'
+        message: 'Missing authorization code or state',
       });
     }
 
@@ -79,7 +79,7 @@ router.get('/callback', async (req, res) => {
     if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
       return res.status(500).json({
         success: false,
-        message: 'GitHub OAuth not configured on server'
+        message: 'GitHub OAuth not configured on server',
       });
     }
 
@@ -103,7 +103,7 @@ router.get('/callback', async (req, res) => {
     if (!accessToken) {
       return res.status(400).json({
         success: false,
-        message: 'Failed to get access token from GitHub'
+        message: 'Failed to get access token from GitHub',
       });
     }
 
@@ -120,11 +120,11 @@ router.get('/callback', async (req, res) => {
 
     // Get the user's stored GitHub profile URL
     const userDoc = await admin.firestore().collection('users').doc(userId).get();
-    
+
     if (!userDoc.exists) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -135,7 +135,7 @@ router.get('/callback', async (req, res) => {
     if (githubProfileUrl !== storedGithubUrl) {
       return res.status(400).json({
         success: false,
-        message: `GitHub profile mismatch. Expected: ${storedGithubUrl}, Got: ${githubProfileUrl}`
+        message: `GitHub profile mismatch. Expected: ${storedGithubUrl}, Got: ${githubProfileUrl}`,
       });
     }
 
@@ -145,7 +145,7 @@ router.get('/callback', async (req, res) => {
       githubUsername: githubUser.login,
       githubId: githubUser.id,
       githubVerifiedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     });
 
     // Success page (in production, redirect to your frontend)
@@ -167,10 +167,9 @@ router.get('/callback', async (req, res) => {
         </body>
       </html>
     `);
-
   } catch (error) {
     console.error('GitHub verification error:', error);
-    
+
     res.send(`
       <html>
         <body>
@@ -191,11 +190,11 @@ router.get('/status', verifyToken, async (req, res) => {
     const userId = req.user.uid;
 
     const userDoc = await admin.firestore().collection('users').doc(userId).get();
-    
+
     if (!userDoc.exists) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -207,14 +206,13 @@ router.get('/status', verifyToken, async (req, res) => {
       isGithubVerified: isVerified,
       githubProfileUrl: userData?.githubProfileUrl,
       githubUsername: userData?.githubUsername,
-      githubVerifiedAt: userData?.githubVerifiedAt
+      githubVerifiedAt: userData?.githubVerifiedAt,
     });
-
   } catch (error) {
     console.error('Check verification status error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to check verification status'
+      message: 'Failed to check verification status',
     });
   }
 });
@@ -228,7 +226,7 @@ router.post('/verify-manual', verifyToken, async (req, res) => {
     if (!githubToken) {
       return res.status(400).json({
         success: false,
-        message: 'GitHub token is required'
+        message: 'GitHub token is required',
       });
     }
 
@@ -245,11 +243,11 @@ router.post('/verify-manual', verifyToken, async (req, res) => {
 
     // Get the user's stored GitHub profile URL
     const userDoc = await admin.firestore().collection('users').doc(userId).get();
-    
+
     if (!userDoc.exists) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -260,7 +258,7 @@ router.post('/verify-manual', verifyToken, async (req, res) => {
     if (githubProfileUrl !== storedGithubUrl) {
       return res.status(400).json({
         success: false,
-        message: `GitHub profile mismatch. Expected: ${storedGithubUrl}, Got: ${githubProfileUrl}`
+        message: `GitHub profile mismatch. Expected: ${storedGithubUrl}, Got: ${githubProfileUrl}`,
       });
     }
 
@@ -270,21 +268,20 @@ router.post('/verify-manual', verifyToken, async (req, res) => {
       githubUsername: githubUser.login,
       githubId: githubUser.id,
       githubVerifiedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     });
 
     res.json({
       success: true,
       message: 'GitHub account verified successfully',
       githubProfileUrl,
-      githubUsername: githubUser.login
+      githubUsername: githubUser.login,
     });
-
   } catch (error) {
     console.error('Manual GitHub verification error:', error);
     res.status(400).json({
       success: false,
-      message: 'Failed to verify GitHub account'
+      message: 'Failed to verify GitHub account',
     });
   }
 });

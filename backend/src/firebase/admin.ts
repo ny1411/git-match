@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 try {
   // Load service account from JSON file
   const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.json');
-  
+
   // Check if file exists
   try {
     readFileSync(serviceAccountPath);
@@ -29,7 +29,7 @@ try {
   if (!admin.apps || admin.apps.length === 0) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+      databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
     });
     console.log(' Firebase Admin initialized successfully');
   }
