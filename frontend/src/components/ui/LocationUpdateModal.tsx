@@ -32,7 +32,7 @@ export const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
 
         // Simulating API delay
         setTimeout(() => {
-          setLocation('Detected City, Country'); // Replace with API result
+          setLocation('London, UK'); // Replace with API result
           setLoading(false);
         }, 1000);
       },

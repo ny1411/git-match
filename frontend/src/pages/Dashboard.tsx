@@ -8,8 +8,12 @@ import { CustomButton } from '../components/ui/CustomButton';
 import { ArrowLeft, MapPin, Settings, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LocationUpdateModal } from '../components/ui/LocationUpdateModal';
+import { getUserLocation, saveUserLocation } from '../services/location.service';
+import { useAuth } from '../hooks/useAuth';
 
 const Dashboard: React.FC = () => {
+  const { firebaseToken, userProfile, isLoading: authLoading } = useAuth();
+
   const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES);
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
   const [gradient, setGradient] = useState<string>(
@@ -58,6 +62,27 @@ const Dashboard: React.FC = () => {
     };
   }, [profiles]);
 
+  useEffect(() => {
+    const loadLocation = async () => {
+      if (userProfile?.uid && firebaseToken) {
+        try {
+          // console.log('Loading location of user:', userProfile.uid);
+          const userLocation = await getUserLocation(userProfile.uid);
+
+          setCurrentLocation(userLocation);
+          console.log('New Current Location:', userLocation);
+        } catch (e) {
+          console.error('Failed to load location:', e);
+        }
+      } else {
+        console.log('Waiting for user profile and firebase token...');
+      }
+    };
+    if (!authLoading && userProfile?.uid && firebaseToken) {
+      loadLocation();
+    }
+  }, [firebaseToken, userProfile?.uid, authLoading]);
+
   const handleOpenLocationUpdateModal = () => {
     setIsLocationModalOpen(true);
   };
@@ -68,7 +93,12 @@ const Dashboard: React.FC = () => {
 
   const handleSaveLocation = (newLocation: string) => {
     setCurrentLocation(newLocation);
-    // Add API call to update user profile backend here
+    try {
+      if (!userProfile) throw new Error('User not authenticated.');
+      saveUserLocation(userProfile.uid, newLocation);
+    } catch (e) {
+      console.error('Failed to save location:', e);
+    }
     setIsLocationModalOpen(false);
   };
 
