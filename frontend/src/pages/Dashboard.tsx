@@ -7,6 +7,7 @@ import { MOCK_PROFILES } from '../data/mockProfile';
 import { CustomButton } from '../components/ui/CustomButton';
 import { ArrowLeft, MapPin, Settings, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LocationUpdateModal } from '../components/ui/LocationUpdateModal';
 
 const Dashboard: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES);
@@ -14,6 +15,8 @@ const Dashboard: React.FC = () => {
   const [gradient, setGradient] = useState<string>(
     'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)'
   );
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(''); // fetch from profile
 
   const navigate = useNavigate();
 
@@ -55,7 +58,19 @@ const Dashboard: React.FC = () => {
     };
   }, [profiles]);
 
-  const handleOpenLocationUpdateModal = () => {};
+  const handleOpenLocationUpdateModal = () => {
+    setIsLocationModalOpen(true);
+  };
+
+  const handleCloseLocationModal = () => {
+    setIsLocationModalOpen(false);
+  };
+
+  const handleSaveLocation = (newLocation: string) => {
+    setCurrentLocation(newLocation);
+    // Add API call to update user profile backend here
+    setIsLocationModalOpen(false);
+  };
 
   // Swipe Handlers
   const handleSwipe = (direction: 'left' | 'right') => {
@@ -115,7 +130,7 @@ const Dashboard: React.FC = () => {
             className="flex w-full cursor-pointer items-center justify-center gap-2 bg-white/10 px-4 text-white hover:border-green-500/50 hover:bg-green-500/20 hover:text-green-400"
           >
             <MapPin />
-            London
+            {currentLocation}
           </CustomButton>
         </div>
         <div className="flex gap-4">
@@ -159,6 +174,13 @@ const Dashboard: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+      {isLocationModalOpen && (
+        <LocationUpdateModal
+          onClose={handleCloseLocationModal}
+          onSave={handleSaveLocation}
+          currentLocation={currentLocation}
+        />
+      )}
     </div>
   );
 };
