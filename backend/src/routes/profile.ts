@@ -95,7 +95,7 @@ router.get("/me", verifyToken, async (req: Request, res: Response) => {
 });
 
 // Update current user's profile (authenticated)
-router.put("/me", verifyToken, async (req: Request, res: Response) => {
+router.put("/me",profileLimiter, verifyToken, async (req: Request, res: Response) => {
 	try {
 		const userId = (req as AuthenticatedRequest).user!.uid;
 		const updateData = req.body as UpdateProfileRequest;
