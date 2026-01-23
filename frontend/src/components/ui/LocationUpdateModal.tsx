@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, X, Navigation } from 'lucide-react';
+import { loadGoogleMaps } from '../../services/maps.service';
 
 interface LocationUpdateModalProps {
   onClose: () => void;
@@ -15,6 +16,86 @@ export const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
   const [location, setLocation] = useState(currentLocation);
   const [loading, setLoading] = useState(false);
 
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initMap() {
+      await loadGoogleMaps();
+
+      if (!isMounted || !mapRef.current || map) return;
+
+      const initialMap = new google.maps.Map(mapRef.current, {
+        center: { lat: 51.5074, lng: -0.1278 },
+        zoom: 12,
+        disableDefaultUI: true,
+      });
+
+      initialMap.addListener('click', (e: google.maps.MapMouseEvent) => {
+        handleMapClick(e.latLng, initialMap);
+      });
+
+      setMap(initialMap);
+    }
+
+    initMap();
+
+    return () => {
+      isMounted = false;
+    };
+  });
+
+  const handleMapClick = async (
+    latLng: google.maps.LatLng | null | undefined,
+    mapInstance: google.maps.Map
+  ) => {
+    if (!latLng) return;
+
+    // Remove old marker
+    markerRef.current?.setMap(null);
+
+    // Place new marker
+    const newMarker = new google.maps.Marker({
+      position: latLng,
+      map: mapInstance,
+    });
+    markerRef.current = newMarker;
+
+    handleMapPanToLocation(latLng, mapInstance);
+
+    await handleGeocoder(latLng);
+  };
+
+  const handleGeocoder = async (latLng: google.maps.LatLng | null | undefined) => {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ location: latLng }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        const region = results[0].address_components[1].short_name;
+        const sublocality = results[0].address_components[2].short_name;
+        const locality = results[0].address_components[3].short_name;
+        const formattedAddress = region + ', ' + sublocality + ', ' + locality;
+        setLocation(formattedAddress);
+      } else {
+        console.error('Geocode failed: ' + status);
+      }
+    });
+  };
+
+  const handleMapPanToLocation = async (
+    latLng: google.maps.LatLng | null | undefined,
+    mapInstance: google.maps.Map
+  ) => {
+    if (!latLng) return;
+    mapInstance.setZoom(14);
+    mapInstance.panTo(latLng);
+    setTimeout(() => {
+      mapInstance.setZoom(15);
+    }, 500);
+  };
+
   const handleDetectLocation = () => {
     setLoading(true);
     if (!navigator.geolocation) {
@@ -25,16 +106,14 @@ export const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        // Mocking reverse geocoding for speed.
-        // In production, send lat/long to Google Maps Geocoding API or OpenStreetMap Nominatim here.
         const { latitude, longitude } = position.coords;
-        console.log(`Lat: ${latitude}, Long: ${longitude}`);
 
-        // Simulating API delay
         setTimeout(() => {
-          setLocation('London, UK'); // Replace with API result
+          handleGeocoder(new google.maps.LatLng(latitude, longitude));
           setLoading(false);
         }, 1000);
+
+        handleMapClick(new google.maps.LatLng(latitude, longitude), map!);
       },
       (error) => {
         console.error(error);
@@ -84,15 +163,9 @@ export const LocationUpdateModal: React.FC<LocationUpdateModalProps> = ({
             <div className="h-px w-full bg-white/10"></div>
           </div>
 
-          {/* Map Canvas */}
-          <div className="flex h-60 w-full items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5">
-            {/* Replace with Google Maps API */}
-            <iframe
-              className=""
-              src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d9249.56628752442!2d77.63770791509144!3d12.910063191575984!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1768972648306!5m2!1sen!2sin"
-              style={{ width: '100%', height: '100%' }}
-              loading="lazy"
-            ></iframe>
+          {/* Map Container */}
+          <div className="flex h-100 w-full items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5">
+            <div className="my-4 h-full w-full overflow-hidden rounded-xl" ref={mapRef}></div>
           </div>
 
           {/* Detect Location Button */}
