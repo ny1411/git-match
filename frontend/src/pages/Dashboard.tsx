@@ -5,7 +5,7 @@ import type { Profile } from '../types/profile';
 import SwipeCard from '../components/match/SwipeCard';
 import { MOCK_PROFILES } from '../data/mockProfile';
 import { CustomButton } from '../components/ui/CustomButton';
-import { ArrowLeft, MapPin, Settings, UserRound } from 'lucide-react';
+import { ArrowLeft, LoaderCircle, MapPin, Settings, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LocationUpdateModal } from '../components/ui/LocationUpdateModal';
 import { getUserLocation, saveUserLocation } from '../services/location.service';
@@ -159,8 +159,32 @@ const Dashboard: React.FC = () => {
             onClick={handleOpenLocationUpdateModal}
             className="flex w-full cursor-pointer items-center justify-center gap-2 bg-white/10 px-4 text-white hover:border-green-500/50 hover:bg-green-500/20 hover:text-green-400"
           >
-            <MapPin />
-            {currentLocation}
+            <AnimatePresence mode="wait" initial={false}>
+              {!currentLocation ? (
+                <motion.div
+                  key="loader"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
+                  <LoaderCircle className="animate-spin" />
+                </motion.div>
+              ) : (
+                <div className="flex gap-2">
+                  <motion.div
+                    key="location"
+                    className="flex gap-2"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  >
+                    <MapPin /> {currentLocation}
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </CustomButton>
         </div>
         <div className="flex gap-4">
