@@ -789,3 +789,88 @@ router.get('/suggestions/:userId', verifyToken, async (req, res) => {
 });
 
 export default router;
+
+// -----------------------------------------------------------------------------
+// Swipe endpoints
+// These endpoints maintain three lists for each user in Firestore:
+//  - `swipedRight`      : uids this user has swiped right on
+//  - `gotSwipedRight`   : uids that swiped right on this user
+//  - `connected`        : mutual connections (both users swiped right)
+// The endpoints are intentionally small and defensive: they create missing
+// arrays if needed and avoid duplicate entries using Firestore arrayUnion.
+// -----------------------------------------------------------------------------
+
+// Record a right-swipe from the authenticated user to `toUserId`.
+// Body: { toUserId: string }
+router.post('/swipe/right', verifyToken, async (req: any, res: any) => {
+  try {
+    const fromUserId = req.user && req.user.uid;
+    const { toUserId } = req.body;
+
+    if (!fromUserId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+    if (!toUserId) return res.status(400).json({ success: false, message: 'toUserId is required' });
+    if (fromUserId === toUserId) return res.status(400).json({ success: false, message: 'Cannot swipe on yourself' });
+
+    const usersColl = admin.firestore().collection('users');
+    const fromRef = usersColl.doc(fromUserId);
+    const toRef = usersColl.doc(toUserId);
+
+    // Read both docs to check for mutual swipe
+    const [fromSnap, toSnap] = await Promise.all([fromRef.get(), toRef.get()]);
+
+    // Ensure documents exist (create a minimal doc if missing)
+    if (!fromSnap.exists) await fromRef.set({ uid: fromUserId }, { merge: true });
+    if (!toSnap.exists) await toRef.set({ uid: toUserId }, { merge: true });
+
+    // Add to `swipedRight` for fromUser and to `gotSwipedRight` for toUser
+    await Promise.all([
+      fromRef.update({ swipedRight: admin.firestore.FieldValue.arrayUnion(toUserId) }),
+      toRef.update({ gotSwipedRight: admin.firestore.FieldValue.arrayUnion(fromUserId) })
+    ]);
+
+    // Re-fetch target doc to check if they already swiped right on the actor
+    const updatedToSnap = await toRef.get();
+    const updatedToData = updatedToSnap.data() || {};
+    const targetSwipedRight: string[] = updatedToData.swipedRight || [];
+
+    // If mutual, add to both `connected` lists
+    if (targetSwipedRight.includes(fromUserId)) {
+      await Promise.all([
+        fromRef.update({ connected: admin.firestore.FieldValue.arrayUnion(toUserId) }),
+        toRef.update({ connected: admin.firestore.FieldValue.arrayUnion(fromUserId) })
+      ]);
+
+      return res.json({ success: true, connected: true, message: 'It\'s a match!' });
+    }
+
+    return res.json({ success: true, connected: false });
+  } catch (error: any) {
+    console.error('Swipe right error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to record swipe' });
+  }
+});
+
+// Get the three lists for a user. Use authenticated user when :userId is 'me'
+router.get('/swipe/lists/:userId', verifyToken, async (req: any, res: any) => {
+  try {
+    const paramId = req.params.userId;
+    const userId = paramId === 'me' ? (req.user && req.user.uid) : paramId;
+    if (!userId) return res.status(400).json({ success: false, message: 'userId is required' });
+
+    const doc = await admin.firestore().collection('users').doc(userId).get();
+    if (!doc.exists) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const data = doc.data() || {};
+    return res.json({
+      success: true,
+      lists: {
+        swipedRight: data.swipedRight || [],
+        gotSwipedRight: data.gotSwipedRight || [],
+        connected: data.connected || []
+      }
+    });
+  } catch (error: any) {
+    console.error('Get swipe lists error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to get lists' });
+  }
+});
