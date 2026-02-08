@@ -29,3 +29,7 @@ backend/dist/
 # VS Code settings (optional)
 .vscode/
 backend/firebase-service-account.json
+
+# Sensitive local Firebase configs (do not commit)
+backend/firebase-service-account*.json
+backend/firebase.js

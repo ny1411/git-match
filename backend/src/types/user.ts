@@ -36,6 +36,9 @@ export interface SignupRequest {
     
     // Image
     profileImage?: string; // Firebase Storage URL
+
+    // Swipes
+    leftswiped?: string[];
     
     // Timestamps
     createdAt: string;
