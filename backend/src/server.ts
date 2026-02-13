@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import leftSwipeRoutes from './routes/leftswipe.js';
 import recommendationsRoutes from './routes/recommendations.js';
+import settingsRoutes from './routes/settings.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/leftswipe', leftSwipeRoutes);
 app.use('/api/recommendations', recommendationsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -43,4 +45,6 @@ app.listen(PORT, () => {
   console.log(` Update Profile: PUT http://localhost:${PORT}/api/profile/me`);
   console.log(` Left Swipe: POST http://localhost:${PORT}/api/leftswipe`);
   console.log(` Recommendations: GET http://localhost:${PORT}/api/recommendations`);
+  console.log(` Get Settings: GET http://localhost:${PORT}/api/settings/me`);
+  console.log(` Update Settings: PUT http://localhost:${PORT}/api/settings/me`);
 });

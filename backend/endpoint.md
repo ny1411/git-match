@@ -180,6 +180,139 @@ Returns a ranked list of recommended users for swipe cards. Excludes users alrea
   - **404** `{ success: false, message: "User profile not found" }`
   - **500** `{ success: false, message: "Failed to retrieve recommendations" }`
 
+## Settings
+
+User settings are stored under the `settings` field of the user document in `users/{uid}`. If no settings exist yet, the backend returns sensible defaults.
+
+All settings endpoints require:
+- Header: `Authorization: Bearer <Firebase ID token>` (session-cookie fallback is also attempted).
+
+### GET `/api/settings/me`
+Fetch the authenticated user's settings.
+
+- **Auth**: required
+- **Success (200)**
+  - `success` (boolean)
+  - `message` (string)
+  - `settings` (object) with shape:
+    - `connectionPreferences` (object)
+      - `connectionType` (string | null) — one of:
+        - `"serious_relationship"`
+        - `"casual_dating"`
+        - `"friendship"`
+        - `"open_to_anything"`
+      - `showOnProfile` (boolean)
+    - `snoozeMode` (object)
+      - `enabled` (boolean)
+      - `duration` (string) — one of `"24h"`, `"72h"`, `"1w"`, `"custom"`
+      - `customEndDate` (string | null, ISO) — only used when `duration === "custom"`
+      - `allowExistingMatchesToMessage` (boolean)
+      - `hideFromDiscovery` (boolean)
+    - `notifications` (object)
+      - `newMessages` (boolean)
+      - `newMatches` (boolean)
+      - `likes` (boolean)
+      - `matchSuggestions` (boolean)
+      - `appAnnouncements` (boolean)
+      - `globalMute` (boolean)
+      - `quietHours` (object)
+        - `enabled` (boolean)
+        - `start` (string, e.g. `"22:00"`)
+        - `end` (string, e.g. `"07:00"`)
+    - `discoveryFilters` (object)
+      - `ageMin` (number | null)
+      - `ageMax` (number | null)
+      - `distanceKm` (number | null)
+      - `verifiedOnly` (boolean)
+      - `recentlyActiveOnly` (boolean)
+    - `privacy` (object)
+      - `showOnlineStatus` (boolean)
+      - `showLastActive` (boolean)
+      - `profileVisibility` (string) — `"everyone"` or `"matches_only"`
+    - `accountControls` (object)
+      - `deactivateAccount` (boolean) — flag for temporary deactivation
+      - `deleteAccountRequested` (boolean) — flag that a delete flow should run
+    - `safety` (object)
+      - `blockedUserIds` (string[])
+      - `screenshotProtection` (boolean)
+    - `preferences` (object)
+      - `language` (string, e.g. `"en"`)
+      - `theme` (string) — `"light" | "dark" | "system"`
+    - `createdAt` (string, ISO)
+    - `updatedAt` (string, ISO)
+
+- **Errors**
+  - **401** `{ success: false, message: "No token provided" | "Invalid or expired token" }`
+  - **404** `{ success: false, message: "User not found" }`
+  - **500** `{ success: false, message: "Failed to retrieve settings" }`
+
+---
+
+### PUT `/api/settings/me`
+Partially update the authenticated user's settings. The backend deep-merges the payload into the existing settings object and updates timestamps.
+
+- **Auth**: required
+- **Body (JSON)**: any subset of the `settings` shape from **GET** above. Examples:
+
+```json
+{
+  "connectionPreferences": {
+    "connectionType": "serious_relationship",
+    "showOnProfile": true
+  },
+  "snoozeMode": {
+    "enabled": true,
+    "duration": "72h",
+    "allowExistingMatchesToMessage": true,
+    "hideFromDiscovery": true
+  }
+}
+```
+
+```json
+{
+  "notifications": {
+    "globalMute": false,
+    "newMessages": true,
+    "newMatches": true,
+    "likes": true,
+    "matchSuggestions": true,
+    "appAnnouncements": false,
+    "quietHours": {
+      "enabled": true,
+      "start": "21:00",
+      "end": "07:30"
+    }
+  },
+  "discoveryFilters": {
+    "ageMin": 18,
+    "ageMax": 25,
+    "distanceKm": 15,
+    "verifiedOnly": true,
+    "recentlyActiveOnly": true
+  },
+  "privacy": {
+    "showOnlineStatus": false,
+    "showLastActive": false,
+    "profileVisibility": "matches_only"
+  },
+  "preferences": {
+    "language": "en",
+    "theme": "dark"
+  }
+}
+```
+
+- **Success (200)**
+  - `success` (boolean)
+  - `message` (string)
+  - `settings` (object) — full merged settings after update
+
+- **Errors**
+  - **401** `{ success: false, message: "No token provided" | "Invalid or expired token" }`
+  - **404** `{ success: false, message: "User not found" }`
+  - **500** `{ success: false, message: "Failed to update settings" }`
+
 ## Health
 
 ### GET `/health`
@@ -198,4 +331,5 @@ Simple health check.
   - `/api/profile` -> `src/routes/profile.ts`
   - `/api/leftswipe` -> `src/routes/leftswipe.ts`
   - `/api/recommendations` -> `src/routes/recommendations.ts`
+  - `/api/settings` -> `src/routes/settings.ts`
 - The files `src/routes/auth.routes.ts`, `src/routes/match.routes.ts`, `src/routes/user.routes.ts`, and `src/routes/index.ts` are present but contain placeholder comments and are not mounted by the server.
