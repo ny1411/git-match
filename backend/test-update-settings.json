@@ -1,0 +1,18 @@
+{
+  "connectionPreferences": {
+    "connectionType": "serious_relationship",
+    "showOnProfile": true
+  },
+  "notifications": {
+    "globalMute": false,
+    "newMessages": true,
+    "newMatches": true,
+    "likes": true,
+    "matchSuggestions": false,
+    "appAnnouncements": false
+  },
+  "preferences": {
+    "language": "en",
+    "theme": "dark"
+  }
+}
