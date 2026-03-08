@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import admin from '../firebase/admin.js';
 import axios from 'axios';
+import { verifyToken } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -80,21 +81,6 @@ interface MatchResponse {
     sharedInterests: string[];
   };
 }
-
-// Middleware
-const verifyToken = async (req: any, res: any, next: any) => {
-  try {
-    const token = req.headers.authorization?.split('Bearer ')[1];
-    if (!token) {
-      return res.status(401).json({ success: false, message: 'No token provided' });
-    }
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken;
-    next();
-  } catch (error) {
-    return res.status(401).json({ success: false, message: 'Invalid token' });
-  }
-};
 
 // GitHub Data Fetcher
 class GitHubDataService {

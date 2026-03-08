@@ -1,15 +1,9 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import admin from '../firebase/admin.js';
+import { AuthenticatedRequest, verifyToken } from '../middleware/auth.middleware.js';
 import { StorageService } from '../utils/storage.js';
 import { UpdateProfileRequest, ProfileResponse, UserProfile } from '../types/user.js';
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    uid: string;
-    [key: string]: any;
-  };
-}
 
 const router = Router();
 
@@ -21,40 +15,6 @@ const profileLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
-// Middleware to verify Firebase ID token
-// Middleware to verify Firebase ID token or Custom token
-const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = (req.headers.authorization || '') as string;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'No token provided' });
-  }
-
-  const token = authHeader.split('Bearer ')[1];
-
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    (req as AuthenticatedRequest).user = decodedToken as any;
-    return next();
-  } catch (error: any) {
-    console.error('ID token verification failed:', error.message);
-
-    // If ID token verification fails, try custom token
-    try {
-      const decodedToken = await admin
-        .auth()
-        .verifySessionCookie(token, true)
-        .catch(() => {
-          throw new Error('Not a session cookie');
-        });
-      (req as AuthenticatedRequest).user = decodedToken as any;
-      return next();
-    } catch (customError: any) {
-      console.error('Custom token verification also failed:', customError.message);
-      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
-    }
-  }
-};
-
 // Get current user's profile (authenticated)
 router.get('/me', profileLimiter, verifyToken, async (req: Request, res: Response) => {
   try {
