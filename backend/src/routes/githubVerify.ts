@@ -1,43 +1,12 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import admin from '../firebase/admin.js';
 import axios from 'axios';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
-}
+import { AuthenticatedRequest, verifyToken } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Middleware to verify Firebase ID token
-const verifyToken = async (req: any, res: any, next: any) => {
-  try {
-    const token = req.headers.authorization?.split('Bearer ')[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'No token provided',
-      });
-    }
-
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken;
-    next();
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token',
-    });
-  }
-};
-
 // Endpoint to start GitHub OAuth flow
-router.get('/auth-url', verifyToken, (req, res) => {
+router.get('/auth-url', verifyToken, (req: Request, res: Response) => {
   const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 
   if (!GITHUB_CLIENT_ID) {
@@ -49,7 +18,7 @@ router.get('/auth-url', verifyToken, (req, res) => {
 
   const redirectUri = `${process.env.BASE_URL || 'http://localhost:3000'}/api/github-verify/callback`;
   const scope = 'read:user';
-  const state = req.user.uid; // Use user ID as state for security
+  const state = (req as AuthenticatedRequest).user!.uid; // Use user ID as state for security
 
   const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
 
@@ -185,9 +154,9 @@ router.get('/callback', async (req, res) => {
 });
 
 // Endpoint to check GitHub verification status
-router.get('/status', verifyToken, async (req, res) => {
+router.get('/status', verifyToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user.uid;
+    const userId = (req as AuthenticatedRequest).user!.uid;
 
     const userDoc = await admin.firestore().collection('users').doc(userId).get();
 
@@ -218,9 +187,9 @@ router.get('/status', verifyToken, async (req, res) => {
 });
 
 // Endpoint to manually trigger verification (for testing)
-router.post('/verify-manual', verifyToken, async (req, res) => {
+router.post('/verify-manual', verifyToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user.uid;
+    const userId = (req as AuthenticatedRequest).user!.uid;
     const { githubToken } = req.body;
 
     if (!githubToken) {
