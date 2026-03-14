@@ -1,4 +1,4 @@
-import React, { createContext, useState, type ReactNode } from 'react';
+import React, { createContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { auth } from '../config/firebase';
@@ -27,7 +27,7 @@ interface UserProfile {
   email: string;
   githubProfileUrl: string;
   role: string;
-  location: string;
+  geolocation: { city: string; country: string; lat: number; lng: number };
   aboutMe: string;
   createdAt: Date;
   updatedAt: Date;
@@ -77,100 +77,73 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const navigate = useNavigate();
 
-  const handleCheckProfileCompletion = async (accessToken?: string) => {
-    // console.log("Checking profile completion..."); //debug
-    // console.log("Using param token:", accessToken); //debug -> returns correct token
-    // console.log("Using state token:", token); //debug -> returns undefined
+  // Load token when app starts
+  useEffect(() => {
+    const firebaseToken = localStorage.getItem('firebaseToken');
+    if (firebaseToken) {
+      setFirebaseToken(firebaseToken);
+    }
+  }, []);
 
-    if (!accessToken) {
-      // console.error("No token provided to handleCheckProfileCompletion");
+  const handleCheckProfileCompletion = async (idToken?: string) => {
+    if (!idToken) return false;
+
+    const response = await fetch('https://git-match-backend.onrender.com/api/profile/me', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${idToken}` }, // no Content-Type needed for GET
+    });
+
+    if (!response.ok) {
+      console.error('Profile fetch failed:', response.status, await response.text());
       return false;
     }
 
-    try {
-      const response = await fetch('http://localhost:3000/api/profile/me', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+    const result = await response.json();
+    if (!result.success || !result.profile) return false;
 
-      // console.log("Profile fetch response status:", response.status); //debug
+    const p = result.profile;
+    const locationOk = [
+      p.location,
+      p.city,
+      p.country,
+      p?.geolocation?.city,
+      p?.geolocation?.country,
+    ].some((v) => typeof v === 'string' && v.trim() !== '');
 
-      if (!response.ok) {
-        console.error('Profile fetch failed:', response.statusText);
-        return false;
-      }
+    const isComplete =
+      ['fullName', 'githubProfileUrl', 'role', 'aboutMe'].every(
+        (k) => typeof p[k] === 'string' && p[k].trim() !== ''
+      ) && locationOk;
 
-      const result: any = await response.json();
-      // console.log("Profile response:", result); //debug
-
-      if (!result.success) return false;
-
-      const profileData = result.profile || result.user;
-      if (!profileData) return false;
-
-      const requiredFields = ['fullName', 'githubProfileUrl', 'role', 'location', 'aboutMe'];
-      const isComplete = requiredFields.every((field) => {
-        const value = (profileData as any)[field];
-        return typeof value === 'string' && value.trim() !== '';
-      });
-      setIsProfileComplete(isComplete);
-      return isComplete;
-    } catch (e: any) {
-      console.error('Error checking profile completion:', e);
-      return false;
-    }
+    setIsProfileComplete(isComplete);
+    return isComplete;
   };
 
-  // Basic login implementation: set the user data
-  const login = async (email: string, password: string): Promise<AuthResponse> => {
-    setIsLoading(true);
-    setError(null);
+  const login = async (email: string, password: string) => {
+    const response = await fetch('https://git-match-backend.onrender.com/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-    try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const result: AuthResponse = await response.json();
+    const result = await response.json();
+    if (!result.success || !result.token) return result;
 
-      if (!result.success || !result.token) {
-        setError(result.message);
-        setIsLoading(false);
-        return result;
-      }
+    const idToken = result.token; // use for backend APIs
+    localStorage.setItem('accessToken', idToken);
+    setToken(idToken);
 
-      if (result.success && result.token && result.firebaseToken) {
-        setUserProfile(result.user || null);
-        setFirebaseToken(result.firebaseToken);
+    if (result.firebaseToken) {
+      try {
         await signInWithCustomToken(auth, result.firebaseToken);
+      } catch (e) {
+        console.warn('Firebase custom-token sign-in failed:', e);
       }
-
-      console.log('Login successful', result); //debug
-
-      setToken(result.token);
-      const isComplete = await handleCheckProfileCompletion(result.token);
-
-      // console.log("Is profile complete:", isComplete); //debug
-
-      if (isComplete) {
-        navigate('/dashboard');
-      } else {
-        navigate('/onboarding');
-      }
-
-      // Fetch the user profile data here after sign-in
-      setIsLoading(false);
-      return { success: true, message: 'Login successful!' };
-    } catch (e: any) {
-      const msg = e.message || 'Login failed.';
-      setError(msg);
-      setIsLoading(false);
-      return { success: false, message: msg };
     }
+
+    const isComplete = await handleCheckProfileCompletion(idToken);
+    navigate(isComplete ? '/dashboard' : '/onboarding');
+    return { success: true, message: 'Login successful!' };
   };
 
   // Basic signup implementation: you might call an API then set the user
@@ -180,7 +153,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       // Call Express Backend Signup Endpoint
-      const response = await fetch('http://localhost:3000/api/auth/signup', {
+      const response = await fetch('https://git-match-backend.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -197,25 +170,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (result.success && result.token && result.firebaseToken) {
         await signInWithCustomToken(auth, result.firebaseToken);
 
-        // console.log(result); //debug
-
-        // console.log("Signup successful, token received:", result.token); //debug
         setToken(result.token);
         setFirebaseToken(result.firebaseToken);
+        localStorage.setItem('firebaseToken', result.firebaseToken);
+
         setUserProfile(result.user || null); // Use the profile data returned by the backend
         setIsLoading(false);
 
         const githubVerificationResult = await githubVerificationURL(result.token);
-        // console.log(githubVerificationResult);
         if (githubVerificationResult.success && githubVerificationResult.authUrl) {
           window.open(githubVerificationResult.authUrl, '_blank');
-          // console.log("Verification URL response: ");
           return { success: true, message: 'Signup successful!' };
         }
       }
       return { success: false, message: 'Github verification failed.' };
     } catch (e: any) {
-      // console.error("Signup failed:", e);
       const msg = e.message || 'Signup failed.';
       setError(msg);
       setIsLoading(false);
@@ -225,26 +194,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const githubVerificationURL = async (accessToken: string): Promise<AuthResponse> => {
     try {
-      const response = await fetch('http://localhost:3000/api/github-verify/auth-url', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://git-match-backend.onrender.com/api/github-verify/auth-url',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       const result = await response.json();
-
-      // console.log("Github verification URL started"); //debug
-      // console.log("Using state token:", accessToken); //debug
-      // console.log(
-      // 	"Github verification URL response status:",
-      // 	response.status
-      // ); //debug
-
-      // console.log("Github verification URL response:", result); //debug
-
-      // const status = await githubVerificationStatus(accessToken);
-      // console.log("Github Verification Status:", status);
 
       if (result.success) {
         setIsGithubProfileVerified(true);
@@ -256,7 +216,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       return { success: result.success, message: result.message };
     } catch (e: any) {
-      // console.log("Github verification failed:", e);
       setError(e?.message || 'Github verification failed.');
       return { success: false, message: e?.message };
     }
@@ -264,23 +223,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const githubVerificationStatus = async (accessToken: string | null): Promise<AuthResponse> => {
     try {
-      const response = await fetch('http://localhost:3000/api/github-verify/status', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://git-match-backend.onrender.com/api/github-verify/status',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       const result = await response.json();
-
-      // console.log("Github verification status started"); //debug
-      // console.log("Using state token:", accessToken); //debug
-      // console.log(
-      // 	"Github verification status response status:",
-      // 	response.status
-      // ); //debug
-
-      console.log('Github verification status response:', result); //debug
 
       if (result.success && result.isGithubVerified) {
         setIsGithubProfileVerified(true);
