@@ -1,5 +1,4 @@
 import { useState, type FC, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import BgGradient from '../components/ui/BgGradient';
 import { CropperModal } from '../components/ui/CropperModal';
@@ -11,7 +10,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -21,7 +19,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Trash2, Star, GripVertical, ImagePlus, X } from 'lucide-react';
+import { Trash2, Star, GripVertical, ImagePlus } from 'lucide-react';
 import { getUserGallery, saveUserGallery } from '../services/galleryService';
 
 // --- Types ---
@@ -121,7 +119,6 @@ const SortableImageItem = ({
 
 const Gallery: FC = () => {
   const { firebaseToken, userProfile, isLoading: authLoading } = useAuth(); // Assuming auth context provides these
-  const navigate = useNavigate();
 
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,8 +135,6 @@ const Gallery: FC = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-
-  if (authLoading) return <div>Loading...</div>;
 
   // --- Fetch Gallery on Mount ---
   useEffect(() => {
@@ -189,6 +184,8 @@ const Gallery: FC = () => {
     maxFiles: 1,
     disabled: images.length >= 6,
   });
+
+  if (authLoading) return <div>Loading...</div>;
 
   const handleCropComplete = (base64: string) => {
     const newImage: GalleryImage = {
