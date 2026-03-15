@@ -207,7 +207,7 @@ const Settings: React.FC = () => {
     }
   };
 
-  // if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0a0a0f] font-['Inter',sans-serif] text-gray-200">

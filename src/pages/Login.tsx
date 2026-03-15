@@ -54,7 +54,7 @@ const Login: FC = () => {
           <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-br from-purple-900/20 via-transparent to-transparent"></div>
 
           {/* Toggle Pill */}
-          <div className="relative z-10 mx-auto mb-16 flex h-14 w-full max-w-[280px] rounded-full bg-white p-1 shadow-lg">
+          <div className="relative z-10 mx-auto mb-16 flex h-14 w-full max-w-70 rounded-full bg-white p-1 shadow-lg">
             <button
               type="button"
               onClick={() => setLoginMode('sign-up')}

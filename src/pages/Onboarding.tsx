@@ -21,9 +21,8 @@ const INTERESTS_OPTIONS = [
 const RELATIONSHIP_GOALS = ['Casual', 'Dating', 'Long-term relationship', 'Friendship'];
 
 const Onboarding: FC = () => {
-  const { userProfile, isLoading: authLoading, token } = useAuth();
+  const { userProfile, firebaseToken } = useAuth();
   const navigate = useNavigate();
-
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     dob: new Date(2024, 11, 25, 10, 30, 0, 0),
@@ -275,12 +274,12 @@ const Onboarding: FC = () => {
 
     // Call Backend API to save data to Firestore
     try {
-      const response = await fetch('http://localhost:3000/api/profile/me', {
+      const response = await fetch('https://git-match-backend.onrender.com/api/profile/me', {
         // not the real endpoint
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${firebaseToken}`,
         },
         body: JSON.stringify({
           // 'dob' -> 'dateOfBirth' to match backend's variable name

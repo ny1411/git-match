@@ -2,7 +2,7 @@ import React, { createContext, useEffect, useState, type ReactNode } from 'react
 import { useNavigate } from 'react-router-dom';
 
 import { auth } from '../config/firebase';
-import { signInWithCustomToken } from 'firebase/auth';
+import { signInWithCustomToken, signOut } from 'firebase/auth';
 
 // Define the shape of the context data
 interface AuthContextType {
@@ -57,6 +57,23 @@ interface AuthResponse {
   githubProfile?: UserGithubProfile;
 }
 
+const normalizeUserProfile = (profile: any): UserProfile => ({
+  uid: profile?.uid ?? '',
+  fullName: profile?.fullName ?? '',
+  email: profile?.email ?? '',
+  githubProfileUrl: profile?.githubProfileUrl ?? '',
+  role: profile?.role ?? '',
+  geolocation: {
+    city: profile?.geolocation?.city ?? profile?.city ?? '',
+    country: profile?.geolocation?.country ?? profile?.country ?? '',
+    lat: profile?.geolocation?.lat ?? 0,
+    lng: profile?.geolocation?.lng ?? 0,
+  },
+  aboutMe: profile?.aboutMe ?? '',
+  createdAt: profile?.createdAt ? new Date(profile.createdAt) : new Date(),
+  updatedAt: profile?.updatedAt ? new Date(profile.updatedAt) : new Date(),
+});
+
 // Create the context
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -77,16 +94,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const navigate = useNavigate();
 
-  // Load token when app starts
+  // Restore the auth session and profile when the app starts.
   useEffect(() => {
-    const firebaseToken = localStorage.getItem('firebaseToken');
-    if (firebaseToken) {
-      setFirebaseToken(firebaseToken);
-    }
+    const bootstrapAuth = async () => {
+      const storedAccessToken = localStorage.getItem('accessToken');
+      const storedFirebaseToken = localStorage.getItem('firebaseToken');
+
+      if (storedAccessToken) {
+        setToken(storedAccessToken);
+      }
+
+      if (storedFirebaseToken) {
+        setFirebaseToken(storedFirebaseToken);
+      }
+
+      if (!storedAccessToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        await handleCheckProfileCompletion(storedAccessToken);
+      } catch (e) {
+        console.error('Failed to restore auth session:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    bootstrapAuth();
   }, []);
 
   const handleCheckProfileCompletion = async (idToken?: string) => {
-    if (!idToken) return false;
+    if (!idToken) {
+      setUserProfile(null);
+      setIsProfileComplete(false);
+      return false;
+    }
 
     const response = await fetch('https://git-match-backend.onrender.com/api/profile/me', {
       method: 'GET',
@@ -95,13 +139,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     if (!response.ok) {
       console.error('Profile fetch failed:', response.status, await response.text());
+      setUserProfile(null);
+      setIsProfileComplete(false);
       return false;
     }
 
     const result = await response.json();
-    if (!result.success || !result.profile) return false;
+    if (!result.success || !result.profile) {
+      setUserProfile(null);
+      setIsProfileComplete(false);
+      return false;
+    }
 
     const p = result.profile;
+    setUserProfile(normalizeUserProfile(p));
+
     const locationOk = [
       p.location,
       p.city,
@@ -120,30 +172,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('https://git-match-backend.onrender.com/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    setIsLoading(true);
+    setError(null);
 
-    const result = await response.json();
-    if (!result.success || !result.token) return result;
+    try {
+      const response = await fetch('https://git-match-backend.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const idToken = result.token; // use for backend APIs
-    localStorage.setItem('accessToken', idToken);
-    setToken(idToken);
-
-    if (result.firebaseToken) {
-      try {
-        await signInWithCustomToken(auth, result.firebaseToken);
-      } catch (e) {
-        console.warn('Firebase custom-token sign-in failed:', e);
+      const result = await response.json();
+      if (!result.success || !result.token) {
+        setError(result.message);
+        return result;
       }
-    }
 
-    const isComplete = await handleCheckProfileCompletion(idToken);
-    navigate(isComplete ? '/dashboard' : '/onboarding');
-    return { success: true, message: 'Login successful!' };
+      const idToken = result.token; // use for backend APIs
+      localStorage.setItem('accessToken', idToken);
+      setToken(idToken);
+
+      if (result.firebaseToken) {
+        setFirebaseToken(result.firebaseToken);
+        localStorage.setItem('firebaseToken', result.firebaseToken);
+
+        try {
+          await signInWithCustomToken(auth, result.firebaseToken);
+        } catch (e) {
+          console.warn('Firebase custom-token sign-in failed:', e);
+        }
+      } else {
+        setFirebaseToken(null);
+        localStorage.removeItem('firebaseToken');
+      }
+
+      if (result.user) {
+        setUserProfile(normalizeUserProfile(result.user));
+      }
+
+      const isComplete = await handleCheckProfileCompletion(idToken);
+      navigate(isComplete ? '/dashboard' : '/onboarding');
+      return { success: true, message: 'Login successful!' };
+    } catch (e: any) {
+      const msg = e?.message || 'Login failed.';
+      setError(msg);
+      return { success: false, message: msg };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Basic signup implementation: you might call an API then set the user
@@ -163,7 +239,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (!result.success || !result.token) {
         setError(result.message);
-        setIsLoading(true);
+        setIsLoading(false);
         return result;
       }
 
@@ -171,10 +247,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await signInWithCustomToken(auth, result.firebaseToken);
 
         setToken(result.token);
+        localStorage.setItem('accessToken', result.token);
         setFirebaseToken(result.firebaseToken);
         localStorage.setItem('firebaseToken', result.firebaseToken);
 
-        setUserProfile(result.user || null); // Use the profile data returned by the backend
+        setUserProfile(result.user ? normalizeUserProfile(result.user) : null);
         setIsLoading(false);
 
         const githubVerificationResult = await githubVerificationURL(result.token);
@@ -183,6 +260,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return { success: true, message: 'Signup successful!' };
         }
       }
+      setIsLoading(false);
       return { success: false, message: 'Github verification failed.' };
     } catch (e: any) {
       const msg = e.message || 'Signup failed.';
@@ -259,8 +337,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Logout implementation: clear the user
   const logout = async () => {
     setIsLoading(true);
-    setUserProfile(null);
-    setIsLoading(false);
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.warn('Firebase sign-out failed:', e);
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('firebaseToken');
+      setToken(null);
+      setFirebaseToken(null);
+      setUserProfile(null);
+      setIsProfileComplete(false);
+      setIsLoading(false);
+    }
   };
 
   const value: AuthContextType = {

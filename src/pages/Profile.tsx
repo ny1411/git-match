@@ -124,7 +124,7 @@ const Profile: FC = () => {
           </div>
 
           {/* RIGHT: PREVIEW SECTION */}
-          <div className="relative col-span-1 hidden min-h-[300px] md:col-span-2 md:flex md:min-h-full">
+          <div className="relative col-span-1 hidden min-h-75 md:col-span-2 md:flex md:min-h-full">
             <img
               src="https://images.unsplash.com/photo-1605776332618-6f0b905be303?q=80&w=1500&auto=format&fit=crop"
               alt="Profile Preview Background"
