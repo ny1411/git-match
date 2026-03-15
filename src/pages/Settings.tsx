@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   AlertTriangle,
+  ArrowLeft,
   Bell,
   ChevronRight,
   Clock,
@@ -11,6 +12,7 @@ import {
   Shield,
   UserCog,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { auth } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
@@ -282,6 +284,7 @@ const Section = ({
 
 const Settings: React.FC = () => {
   const { firebaseToken, isLoading: authLoading, logout } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
@@ -399,6 +402,14 @@ const Settings: React.FC = () => {
       )}
 
       <aside className="hidden w-64 flex-col border-r border-white/10 bg-black/50 p-6 md:flex">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="mb-6 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeft size={18} />
+          Back to Dashboard
+        </button>
         <h1 className="mb-8 text-2xl font-bold tracking-wide text-white">Settings</h1>
         <nav className="custom-scrollbar flex flex-1 flex-col gap-2 overflow-y-auto pr-2">
           {sidebarLinks.map((link) => (
