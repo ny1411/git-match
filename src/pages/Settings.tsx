@@ -12,6 +12,7 @@ import {
   UserCog,
 } from 'lucide-react';
 
+import { auth } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
 
 type ConnectionType =
@@ -211,6 +212,14 @@ const formatUpdatedAt = (updatedAt: string): string | null => {
   }).format(date);
 };
 
+const resolveSettingsAuthToken = async (fallbackToken: string | null) => {
+  if (auth.currentUser) {
+    return auth.currentUser.getIdToken();
+  }
+
+  return fallbackToken;
+};
+
 const Toggle = ({
   checked,
   onChange,
@@ -299,20 +308,20 @@ const Settings: React.FC = () => {
         return;
       }
 
-      if (!firebaseToken) {
-        setLoadError('No token provided');
-        setSettingsLoading(false);
-        return;
-      }
-
       setSettingsLoading(true);
       setLoadError(null);
 
       try {
+        const token = await resolveSettingsAuthToken(firebaseToken);
+
+        if (!token) {
+          throw new Error('No token provided');
+        }
+
         const response = await fetch(SETTINGS_API_URL, {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${firebaseToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -336,11 +345,6 @@ const Settings: React.FC = () => {
   }, [authLoading, firebaseToken]);
 
   const updateSettings = async (patch: DeepPartial<UserSettings>) => {
-    if (!firebaseToken) {
-      setSaveStatus('No token provided');
-      return;
-    }
-
     const previousSettings = settings;
     const nextSettings = deepMerge(previousSettings, patch);
 
@@ -348,11 +352,17 @@ const Settings: React.FC = () => {
     setSaveStatus('Saving...');
 
     try {
+      const token = await resolveSettingsAuthToken(firebaseToken);
+
+      if (!token) {
+        throw new Error('No token provided');
+      }
+
       const response = await fetch(SETTINGS_API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${firebaseToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(patch),
       });
