@@ -277,9 +277,7 @@ const Profile: FC = () => {
           return;
         }
 
-        setLoadError(
-          error instanceof Error ? error.message : 'Failed to retrieve profile'
-        );
+        setLoadError(error instanceof Error ? error.message : 'Failed to retrieve profile');
         setProfileData(emptyProfileData);
         setProfilePicture(DEFAULT_PROFILE_PICTURE);
         setProfileAge(null);
@@ -295,10 +293,7 @@ const Profile: FC = () => {
     return () => controller.abort();
   }, [authLoading, firebaseToken]);
 
-  const updateProfileField = <K extends keyof UserProfile>(
-    field: K,
-    value: UserProfile[K]
-  ) => {
+  const updateProfileField = <K extends keyof UserProfile>(field: K, value: UserProfile[K]) => {
     setSaveStatus(null);
     setProfileData((prev) => ({
       ...prev,
@@ -417,13 +412,70 @@ const Profile: FC = () => {
     <div className="relative isolate min-h-dvh w-full overflow-x-clip bg-[#05010b] text-white">
       <BgGradient />
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-        <div className="grid grid-cols-1 overflow-hidden rounded-4xl border border-white/10 bg-white/5 shadow-[0_30px_120px_rgba(6,2,18,0.55)] backdrop-blur-xl lg:grid-cols-5">
-          <div className="col-span-1 p-5 sm:p-6 lg:col-span-3 lg:p-10">
-            <div className="mb-6 flex items-center justify-between gap-4 border-b border-white/10 pb-3">
-              <h2 className="text-2xl font-bold text-white">Profile Setting</h2>
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        {/* NEW LAYOUT: 12-column grid. 
+        Left side (Image) gets 5 columns. 
+        Right side (Details) gets 7 columns. 
+      */}
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
+          {/* LEFT COLUMN: MASSIVE PROFILE PHOTO & UPLOAD */}
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 shadow-[0_30px_120px_rgba(192,38,211,0.15)] lg:sticky lg:top-10 lg:col-span-5 lg:h-[calc(100vh-5rem)]">
+            <img
+              src={
+                profilePicture ||
+                'https://images.unsplash.com/photo-1605776332618-6f0b905be303?q=80&w=1500&auto=format&fit=crop'
+              }
+              alt="Main Profile"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+
+            {/* Subtle gradient so text overlays on the image are readable */}
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/20" />
+
+            {/* Hover Overlay for Uploading */}
+            <div className="group absolute inset-0 flex cursor-pointer flex-col items-center justify-center bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 hover:opacity-100">
+              <div className="mb-3 rounded-full bg-fuchsia-500/20 p-4 text-fuchsia-300 backdrop-blur-md">
+                <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <span className="font-semibold tracking-wide">Update Photo</span>
+            </div>
+
+            {/* Quick Preview Info fixed to the bottom of the photo */}
+            <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-8">
+              <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
+                {profileData.fullName || 'GitMatch User'}
+                {age !== null && <span className="font-light"> {age}</span>}
+              </h1>
+              <p className="mt-2 text-lg font-medium text-gray-200 drop-shadow-sm">
+                {profileData.role || 'Ready to pair program'}
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: PROFILE DETAILS & SETTINGS */}
+          <div className="rounded-4xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl lg:col-span-7 lg:p-10">
+            <div className="mb-8 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-3xl font-bold text-white">Profile Details</h2>
+                <p className="mt-1 text-sm text-gray-400">
+                  Configure how you appear to other developers.
+                </p>
+              </div>
               {isProfileLoading && (
-                <p className="text-sm font-medium text-gray-300">Loading profile...</p>
+                <p className="animate-pulse text-sm font-medium text-fuchsia-400">Loading...</p>
               )}
             </div>
 
@@ -446,11 +498,12 @@ const Profile: FC = () => {
             )}
 
             <div
-              className={`grid grid-cols-3 gap-6 transition-opacity ${
+              className={`space-y-6 transition-opacity ${
                 isProfileLoading || isSaving ? 'pointer-events-none opacity-60' : 'opacity-100'
               }`}
             >
-              <div className="col-span-3 space-y-4 lg:col-span-2">
+              {/* Grid for standard text inputs */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <InputField
                   onChange={handleChange}
                   name="fullName"
@@ -466,18 +519,22 @@ const Profile: FC = () => {
                   readOnly
                   type="number"
                 />
-                <InputField
-                  onChange={handleChange}
-                  name="role"
-                  label="Role/Area of interest"
-                  value={profileData.role}
-                />
-                <InputField
-                  onChange={handleChange}
-                  name="githubURL"
-                  label="Github Profile Link (Authentication required)"
-                  value={profileData.githubURL}
-                />
+                <div className="md:col-span-2">
+                  <InputField
+                    onChange={handleChange}
+                    name="role"
+                    label="Role / Area of Interest"
+                    value={profileData.role}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <InputField
+                    onChange={handleChange}
+                    name="githubURL"
+                    label="Github Profile Link"
+                    value={profileData.githubURL}
+                  />
+                </div>
                 <InputField
                   onChange={handleChange}
                   name="location"
@@ -486,195 +543,127 @@ const Profile: FC = () => {
                 />
                 <InputField
                   onChange={handleChange}
-                  name="about"
-                  label="About me"
-                  value={profileData.about}
-                />
-                <InputField
-                  onChange={handleChange}
                   name="dob"
                   label="Date of Birth"
                   value={profileData.dob}
                   type="date"
                 />
-
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <label className="mb-3 block text-sm text-gray-300">Gender Preference</label>
-                  <div className="flex flex-wrap gap-3">
-                    {GENDER_PREFERENCES.map((preference) => {
-                      const isSelected = profileData.genderPreference === preference;
-
-                      return (
-                        <button
-                          key={preference}
-                          type="button"
-                          onClick={() => updateProfileField('genderPreference', preference)}
-                          className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                            isSelected
-                              ? 'border-pink-500 bg-pink-600 text-white shadow-md'
-                              : 'border-white/10 bg-white/10 text-gray-300 hover:bg-white/20'
-                          }`}
-                        >
-                          {preference}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="md:col-span-2">
+                  <InputField
+                    onChange={handleChange}
+                    name="about"
+                    label="About me"
+                    value={profileData.about}
+                  />
                 </div>
+              </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <label className="block text-sm text-gray-300">
-                      Interests (Select all that apply)
-                    </label>
-                    <span className="text-xs font-medium text-purple-300">
-                      {selectedInterestCount} selected
-                    </span>
-                  </div>
+              <hr className="my-6 border-white/10" />
 
-                  <div className="flex flex-wrap gap-3">
-                    {INTERESTS_OPTIONS.map((interest) => (
+              {/* Gender Preferences */}
+              <div>
+                <label className="mb-3 block text-sm font-medium text-gray-300">
+                  I am looking for
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {GENDER_PREFERENCES.map((preference) => {
+                    const isSelected = profileData.genderPreference === preference;
+                    return (
                       <button
-                        key={interest}
+                        key={preference}
                         type="button"
-                        onClick={() => handleInterestChange(interest)}
-                        className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                          profileData.interests.includes(interest)
-                            ? 'bg-pink-600 text-white shadow-md'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        onClick={() => updateProfileField('genderPreference', preference)}
+                        className={`rounded-full border px-5 py-2.5 text-sm font-medium transition-colors ${
+                          isSelected
+                            ? 'border-fuchsia-500 bg-fuchsia-600 text-white shadow-md'
+                            : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/15'
                         }`}
                       >
-                        {interest}
+                        {preference}
                       </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-4">
-                    <InputField
-                      label="Other Interest (Free text)"
-                      name="otherInterest"
-                      value={profileData.otherInterest}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <label className="mb-3 block text-sm text-gray-300">Relationship Goals</label>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {RELATIONSHIP_GOALS.map((goal) => {
-                      const isSelected = profileData.relationshipGoals === goal;
-
-                      return (
-                        <button
-                          key={goal}
-                          type="button"
-                          onClick={() => updateProfileField('relationshipGoals', goal)}
-                          className={`rounded-xl border-2 p-4 text-center transition-all ${
-                            isSelected
-                              ? 'border-purple-500 bg-purple-600 text-white shadow-xl shadow-purple-900/50'
-                              : 'border-gray-700 bg-white/5 text-gray-300 hover:border-purple-500/50'
-                          }`}
-                        >
-                          <span className="text-base font-semibold">{goal}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="col-span-3 flex flex-col items-center rounded-[1.75rem] border border-white/10 bg-black/20 px-6 py-7 text-center lg:col-span-1 lg:justify-start">
-                <img
-                  src={profilePicture}
-                  alt="Upload Preview"
-                  className="mb-4 h-28 w-28 rounded-full border-4 border-fuchsia-400/60 object-cover shadow-[0_0_40px_rgba(192,38,211,0.28)]"
-                />
-                <button className="cursor-pointer text-sm font-medium text-gray-300 transition-colors hover:text-white">
-                  Upload Image
-                </button>
-                <p className="mt-2 max-w-xs text-xs leading-5 text-gray-400">
-                  Use a bright, centered photo for the best profile preview.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4">
-              <button
-                type="button"
-                onClick={() => void handleSave()}
-                disabled={isProfileLoading || isSaving}
-                className={`w-40 rounded-full bg-linear-to-r from-purple-600 to-fuchsia-500 py-3 font-bold tracking-wider text-white shadow-lg shadow-purple-500/40 transition-transform ${
-                  isProfileLoading || isSaving
-                    ? 'cursor-not-allowed opacity-70'
-                    : 'cursor-pointer hover:scale-105'
-                }`}
-              >
-                {isSaving ? 'SAVING...' : 'SAVE'}
-              </button>
-            </div>
-          </div>
-
-          <div className="relative hidden min-h-full overflow-hidden border-l border-white/10 lg:col-span-2 lg:flex">
-            <img
-              src="https://images.unsplash.com/photo-1605776332618-6f0b905be303?q=80&w=1500&auto=format&fit=crop"
-              alt="Profile Preview Background"
-              className="absolute inset-0 h-full w-full object-cover opacity-90"
-            />
-
-            <div className="absolute inset-0 bg-linear-to-b from-[#16061d]/30 via-[#0b0312]/35 to-[#05010b]/90" />
-            <div className="absolute inset-0 flex flex-col justify-end bg-black/15 p-6 backdrop-blur-[2px]">
-              <div className="mb-4 flex items-center justify-between rounded-lg bg-black/45 p-3">
-                <div className="flex items-center">
-                  <img
-                    src={profilePicture}
-                    alt="User Profile"
-                    className="mr-3 h-12 w-12 rounded-full object-cover"
-                  />
-                  <div className="text-sm">
-                    <p className="font-bold text-white">
-                      {profileData.fullName || 'GitMatch User'}
-                      {age !== null ? `, ${age}` : ''}
-                    </p>
-                    <p className="text-gray-300">{profileSummary}</p>
-                  </div>
+              {/* Interests */}
+              <div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <label className="block text-sm font-medium text-gray-300">Tech & Hobbies</label>
+                  <span className="text-xs font-medium text-purple-300">
+                    {selectedInterestCount} selected
+                  </span>
                 </div>
-                <button className="cursor-pointer text-sm font-medium text-purple-300 transition-colors hover:text-white">
-                  View Gallery
-                </button>
-              </div>
-
-              <div className="rounded-lg bg-black/45 p-4">
-                <div className="mb-4 space-y-1 text-sm text-white">
-                  <p className="text-purple-300">&lt;About me </p>
-                  <p className="line-clamp-2 pl-4 text-xs text-gray-200">
-                    value="{profileData.about || 'No bio added yet.'}"
-                  </p>
-                  <p className="text-purple-300">&gt;</p>
-                </div>
-
-                <div className="mb-4 flex items-center gap-2">
-                  <div className="rounded bg-purple-500/80 px-2 py-0.5 text-xs font-medium">
-                    <span className="mr-1 text-white">31</span>
-                    Repos
-                  </div>
-                  <div className="rounded bg-purple-500/80 px-2 py-0.5 text-xs font-medium">
-                    <span className="mr-1 text-white">78</span>
-                    Commits
-                  </div>
-                </div>
-
-                <p className="mb-2 text-sm text-purple-300"># Top Languages</p>
-                <div className="flex flex-wrap gap-2">
-                  {['JavaScript', 'Python', 'HTML', 'TypeScript'].map((lang) => (
-                    <span
-                      key={lang}
-                      className="rounded-full bg-purple-700/80 px-2 py-1 text-xs text-white"
+                <div className="flex flex-wrap gap-2.5">
+                  {INTERESTS_OPTIONS.map((interest) => (
+                    <button
+                      key={interest}
+                      type="button"
+                      onClick={() => handleInterestChange(interest)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                        profileData.interests.includes(interest)
+                          ? 'bg-purple-600 text-white shadow-md'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/15'
+                      }`}
                     >
-                      {lang}
-                    </span>
+                      {interest}
+                    </button>
                   ))}
                 </div>
+                <div className="mt-4">
+                  <InputField
+                    label="Other Interest (Free text)"
+                    name="otherInterest"
+                    value={profileData.otherInterest}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Relationship Goals */}
+              <div>
+                <label className="mb-3 block text-sm font-medium text-gray-300">
+                  Relationship Goals
+                </label>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {RELATIONSHIP_GOALS.map((goal) => {
+                    const isSelected = profileData.relationshipGoals === goal;
+                    return (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => updateProfileField('relationshipGoals', goal)}
+                        className={`rounded-2xl border-2 p-5 text-left transition-all ${
+                          isSelected
+                            ? 'border-fuchsia-500 bg-fuchsia-500/10 text-white shadow-[0_0_20px_rgba(217,70,239,0.15)]'
+                            : 'border-white/5 bg-white/5 text-gray-400 hover:border-white/20'
+                        }`}
+                      >
+                        <span
+                          className={`block text-base font-semibold ${isSelected ? 'text-fuchsia-300' : 'text-white'}`}
+                        >
+                          {goal}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="mt-10 flex justify-end pt-6">
+                <button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  disabled={isProfileLoading || isSaving}
+                  className={`w-full rounded-full bg-linear-to-r from-purple-600 to-fuchsia-500 px-10 py-4 font-bold tracking-wider text-white shadow-lg shadow-purple-500/30 transition-all sm:w-auto ${
+                    isProfileLoading || isSaving
+                      ? 'cursor-not-allowed opacity-70'
+                      : 'cursor-pointer hover:scale-[1.02] hover:shadow-fuchsia-500/40'
+                  }`}
+                >
+                  {isSaving ? 'SAVING PROFILE...' : 'SAVE CHANGES'}
+                </button>
               </div>
             </div>
           </div>
