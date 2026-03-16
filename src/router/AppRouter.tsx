@@ -9,6 +9,7 @@ import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
 import Gallery from '../pages/Gallery';
 import Settings from '../pages/Settings';
+import { AppRouteFallback, ProtectedRoute, PublicOnlyRoute } from './RouteGuards';
 // import Features from '../pages/Features';
 // import About from '../pages/About';
 // import Contact from '../pages/Contact';
@@ -19,14 +20,22 @@ import Settings from '../pages/Settings';
 const AppRouter: React.FC = () => {
   return (
     <Routes>
-      {/* Landing page is the default route */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/gallery" element={<Gallery />} />
-      <Route path="/settings" element={<Settings />} />
+      <Route element={<PublicOnlyRoute />}>
+        {/* Landing page is the default route */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+      </Route>
+
+      <Route element={<ProtectedRoute requireIncompleteProfile />}>
+        <Route path="/onboarding" element={<Onboarding />} />
+      </Route>
+
+      <Route element={<ProtectedRoute requireCompleteProfile />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/gallery" element={<Gallery />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
 
       {/* Homepage navbar elements */}
       {/* <Route path="/features" element={<Features />} />
@@ -39,7 +48,7 @@ const AppRouter: React.FC = () => {
       {/* <Route path="/chat" element={<Chat />} /> */}
 
       {/* Add a fallback/404 route */}
-      <Route path="*" element={<LandingPage />} />
+      <Route path="*" element={<AppRouteFallback />} />
     </Routes>
   );
 };

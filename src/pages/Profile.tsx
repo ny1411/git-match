@@ -397,10 +397,6 @@ const Profile: FC = () => {
     }
   };
 
-  const profileSummary =
-    [profileData.role, profileData.location].filter(Boolean).join(', ') ||
-    'Profile details unavailable';
-
   const selectedInterestCount =
     profileData.interests.length +
     profileData.otherInterest
