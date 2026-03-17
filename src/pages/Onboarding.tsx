@@ -23,7 +23,7 @@ const INTERESTS_OPTIONS = [
 const RELATIONSHIP_GOALS = ['Casual', 'Dating', 'Long-term relationship', 'Friendship'];
 
 const Onboarding: FC = () => {
-  const { userProfile, firebaseToken } = useAuth();
+  const { userProfile, firebaseToken, markProfileComplete } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -300,13 +300,13 @@ const Onboarding: FC = () => {
       const result = await response.json();
 
       if (result.success) {
+        markProfileComplete();
         setStatus({
           message: 'Profile setup complete! Redirecting...',
           loading: false,
           error: false,
         });
-        // Redirect to the main app dashboard
-        setTimeout(() => navigate('/dashboard'), 1500);
+        navigate('/dashboard', { replace: true });
       } else {
         setStatus({
           message: result.message || 'Submission failed.',
