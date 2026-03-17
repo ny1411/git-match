@@ -5,7 +5,7 @@ import { InputField } from '../components/ui/InputField';
 import { auth } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
 
-const PROFILE_API_URL = `${import.meta.env.VITE_API_BASE_URL ?? 'https://git-match-backend.onrender.com'}/api/profile/me`;
+const PROFILE_API_URL = `${import.meta.env.VITE_API_BACKEND_BASE_URL}/api/profile/me`;
 const DEFAULT_PROFILE_PICTURE =
   'https://images.unsplash.com/photo-1554083021-dd6b85a6d423?q=80&w=150&h=150&fit=crop';
 const GENDER_PREFERENCES = ['Male', 'Female', 'Other', 'Prefer not to say'];

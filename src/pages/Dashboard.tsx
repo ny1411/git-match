@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { auth } from '../config/firebase';
 
-const BACKEND_BASE_URL = 'https://git-match-backend.onrender.com';
+const BACKEND_BASE_URL = import.meta.env.VITE_API_BACKEND_BASE_URL;
 const RECOMMENDATIONS_LIMIT = 20;
 const DEFAULT_GRADIENT = 'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)';
 
@@ -190,28 +190,31 @@ const Dashboard: React.FC = () => {
     }
   }, [getAuthToken]);
 
-  const recordLeftSwipe = useCallback(async (targetUserId: string) => {
-    const authToken = await getAuthToken();
+  const recordLeftSwipe = useCallback(
+    async (targetUserId: string) => {
+      const authToken = await getAuthToken();
 
-    if (!authToken) {
-      throw new Error('Please log in again to continue swiping.');
-    }
+      if (!authToken) {
+        throw new Error('Please log in again to continue swiping.');
+      }
 
-    const response = await fetch(`${BACKEND_BASE_URL}/api/leftswipe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: JSON.stringify({ targetUserId }),
-    });
+      const response = await fetch(`${BACKEND_BASE_URL}/api/leftswipe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ targetUserId }),
+      });
 
-    const result = ((await response.json().catch(() => null)) ?? {}) as ApiResponse;
+      const result = ((await response.json().catch(() => null)) ?? {}) as ApiResponse;
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || 'Failed to record left swipe');
-    }
-  }, [getAuthToken]);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to record left swipe');
+      }
+    },
+    [getAuthToken]
+  );
 
   useEffect(() => {
     if (authLoading) {

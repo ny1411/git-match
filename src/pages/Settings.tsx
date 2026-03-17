@@ -88,7 +88,7 @@ type DeepPartial<T> = {
       : T[K];
 };
 
-const SETTINGS_API_URL = `${import.meta.env.VITE_API_BASE_URL ?? 'https://git-match-backend.onrender.com'}/api/settings/me`;
+const SETTINGS_API_URL = `${import.meta.env.VITE_API_BACKEND_BASE_URL}/api/settings/me`;
 
 const defaultSettings: UserSettings = {
   connectionPreferences: {
@@ -336,8 +336,7 @@ const Settings: React.FC = () => {
 
         setSettings(normalizeSettings(data.settings));
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to retrieve settings';
+        const message = error instanceof Error ? error.message : 'Failed to retrieve settings';
         setLoadError(message);
       } finally {
         setSettingsLoading(false);
@@ -436,7 +435,7 @@ const Settings: React.FC = () => {
                 </p>
               </div>
               {updatedAtLabel && (
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-gray-500">
+                <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase">
                   Updated {updatedAtLabel}
                 </p>
               )}
@@ -457,8 +456,8 @@ const Settings: React.FC = () => {
                 onChange={(e) =>
                   void updateSettings({
                     connectionPreferences: {
-                      connectionType:
-                        (e.target.value || null) as UserSettings['connectionPreferences']['connectionType'],
+                      connectionType: (e.target.value ||
+                        null) as UserSettings['connectionPreferences']['connectionType'],
                     },
                   })
                 }
@@ -505,9 +504,7 @@ const Settings: React.FC = () => {
                         snoozeMode: {
                           duration: e.target.value as SnoozeDuration,
                           customEndDate:
-                            e.target.value === 'custom'
-                              ? settings.snoozeMode.customEndDate
-                              : null,
+                            e.target.value === 'custom' ? settings.snoozeMode.customEndDate : null,
                         },
                       })
                     }

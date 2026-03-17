@@ -14,6 +14,7 @@ import {
   type UserProfile,
 } from './auth-context';
 
+const BACKEND_BASE_URL = import.meta.env.VITE_API_BACKEND_BASE_URL;
 const ACCESS_TOKEN_STORAGE_KEY = 'accessToken';
 const FIREBASE_TOKEN_STORAGE_KEY = 'firebaseToken';
 
@@ -23,10 +24,9 @@ interface ProfileLookupResponse {
   profile?: ApiUserProfile | null;
 }
 
-const REQUIRED_PROFILE_FIELDS: Array<keyof Pick<
-  ApiUserProfile,
-  'fullName' | 'githubProfileUrl' | 'role' | 'aboutMe'
->> = ['fullName', 'githubProfileUrl', 'role', 'aboutMe'];
+const REQUIRED_PROFILE_FIELDS: Array<
+  keyof Pick<ApiUserProfile, 'fullName' | 'githubProfileUrl' | 'role' | 'aboutMe'>
+> = ['fullName', 'githubProfileUrl', 'role', 'aboutMe'];
 
 const toDate = (value?: string | number | Date | null): Date =>
   value ? new Date(value) : new Date();
@@ -151,7 +151,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return null;
       }
 
-      const response = await fetch('https://git-match-backend.onrender.com/api/profile/me', {
+      const response = await fetch(BACKEND_BASE_URL + '/api/profile/me', {
         method: 'GET',
         headers: { Authorization: `Bearer ${idToken}` }, // no Content-Type needed for GET
       });
@@ -228,7 +228,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
 
     try {
-      const response = await fetch('https://git-match-backend.onrender.com/api/auth/login', {
+      const response = await fetch(BACKEND_BASE_URL + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -280,7 +280,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       // Call Express Backend Signup Endpoint
-      const response = await fetch('https://git-match-backend.onrender.com/api/auth/signup', {
+      const response = await fetch(BACKEND_BASE_URL + '/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -322,16 +322,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const githubVerificationURL = async (accessToken: string): Promise<AuthResponse> => {
     try {
-      const response = await fetch(
-        'https://git-match-backend.onrender.com/api/github-verify/auth-url',
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const response = await fetch(BACKEND_BASE_URL + '/api/github-verify/auth-url', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       const result = (await response.json()) as AuthResponse;
 
       if (result.success) {
@@ -352,16 +349,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const githubVerificationStatus = async (accessToken: string | null): Promise<AuthResponse> => {
     try {
-      const response = await fetch(
-        'https://git-match-backend.onrender.com/api/github-verify/status',
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const response = await fetch(BACKEND_BASE_URL + '/api/github-verify/status', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       const result = (await response.json()) as AuthResponse;
 
       if (result.success && result.isGithubVerified) {

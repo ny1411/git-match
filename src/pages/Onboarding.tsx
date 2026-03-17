@@ -4,6 +4,8 @@ import BgGradient from '../components/ui/BgGradient';
 import { InputField } from '../components/ui/InputField';
 import { useAuth } from '../hooks/useAuth';
 
+const BACKEND_BASE_URL = import.meta.env.VITE_API_BACKEND_BASE_URL;
+
 // --- Static Data ---
 const INTERESTS_OPTIONS = [
   'Open Source',
@@ -274,7 +276,7 @@ const Onboarding: FC = () => {
 
     // Call Backend API to save data to Firestore
     try {
-      const response = await fetch('https://git-match-backend.onrender.com/api/profile/me', {
+      const response = await fetch(BACKEND_BASE_URL + '/api/profile/me', {
         // not the real endpoint
         method: 'PUT',
         headers: {
