@@ -1,4 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FC } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import BgGradient from '../components/ui/BgGradient';
 import { InputField } from '../components/ui/InputField';
@@ -223,6 +225,7 @@ const resolveProfileAuthToken = async (fallbackToken: string | null) => {
 
 const Profile: FC = () => {
   const { firebaseToken, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState<UserProfile>(emptyProfileData);
   const [profilePicture, setProfilePicture] = useState(DEFAULT_PROFILE_PICTURE);
   const [profileAge, setProfileAge] = useState<number | null>(null);
@@ -409,6 +412,15 @@ const Profile: FC = () => {
       <BgGradient />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeft size={18} />
+          Back to Dashboard
+        </button>
+
         {/* NEW LAYOUT: 12-column grid. 
         Left side (Image) gets 5 columns. 
         Right side (Details) gets 7 columns. 

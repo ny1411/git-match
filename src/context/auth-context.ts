@@ -14,6 +14,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<AuthResponse>;
   githubVerificationURL: (accessToken: string) => Promise<AuthResponse>;
   githubVerificationStatus: (accessToken: string | null) => Promise<AuthResponse>;
+  markProfileComplete: () => void;
   logout: () => Promise<void>;
 }
 
@@ -48,6 +49,9 @@ export interface ApiUserProfile {
   email?: string;
   githubProfileUrl?: string;
   role?: string;
+  gender?: string | null;
+  interest?: string | null;
+  goal?: string | null;
   location?: string;
   city?: string;
   country?: string;
@@ -58,6 +62,8 @@ export interface ApiUserProfile {
     lng?: number;
   } | null;
   aboutMe?: string;
+  dob?: string | number | Date | null;
+  dateOfBirth?: string | number | Date | null;
   createdAt?: string | number | Date | null;
   updatedAt?: string | number | Date | null;
 }

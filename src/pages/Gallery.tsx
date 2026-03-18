@@ -1,4 +1,6 @@
 import { useState, type FC, useEffect } from 'react';
+import { ArrowLeft, GripVertical, ImagePlus, Star, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import BgGradient from '../components/ui/BgGradient';
 import { CropperModal } from '../components/ui/CropperModal';
@@ -19,7 +21,6 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Trash2, Star, GripVertical, ImagePlus } from 'lucide-react';
 import { getUserGallery, saveUserGallery } from '../services/galleryService';
 
 // --- Types ---
@@ -119,6 +120,7 @@ const SortableImageItem = ({
 
 const Gallery: FC = () => {
   const { firebaseToken, userProfile, isLoading: authLoading } = useAuth(); // Assuming auth context provides these
+  const navigate = useNavigate();
 
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -270,6 +272,17 @@ const Gallery: FC = () => {
       )}
 
       <main className="relative z-10 container mx-auto flex flex-col items-center px-4 py-12">
+        <div className="mb-6 flex w-full max-w-4xl">
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <ArrowLeft size={18} />
+            Back to Dashboard
+          </button>
+        </div>
+
         {/* Header */}
         <div className="mb-8 flex w-full max-w-4xl items-end justify-between border-b border-white/10 pb-4">
           <div>

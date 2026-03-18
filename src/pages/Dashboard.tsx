@@ -4,7 +4,7 @@ import { getDominantColors } from '../components/utils/colorUtils';
 import type { Profile } from '../types/profile';
 import SwipeCard from '../components/match/SwipeCard';
 import { CustomButton } from '../components/ui/CustomButton';
-import { ArrowLeft, LoaderCircle, MapPin, Settings, UserRound } from 'lucide-react';
+import { ArrowLeft, Images, LoaderCircle, MapPin, Settings, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LocationUpdateModal } from '../components/ui/LocationUpdateModal';
 import {
@@ -494,6 +494,14 @@ const Dashboard: React.FC = () => {
             className="cursor-pointer bg-white/10 text-white hover:border-red-500/50 hover:bg-red-500/20 hover:text-red-400"
           >
             <Settings />
+          </CustomButton>
+          <CustomButton
+            onClick={() => {
+              navigate('/gallery');
+            }}
+            className="cursor-pointer bg-white/10 text-white hover:border-amber-500/50 hover:bg-amber-500/20 hover:text-amber-400"
+          >
+            <Images />
           </CustomButton>
           <CustomButton
             onClick={() => {

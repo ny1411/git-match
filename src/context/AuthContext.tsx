@@ -24,15 +24,45 @@ interface ProfileLookupResponse {
   profile?: ApiUserProfile | null;
 }
 
-const REQUIRED_PROFILE_FIELDS: Array<
-  keyof Pick<ApiUserProfile, 'fullName' | 'githubProfileUrl' | 'role' | 'aboutMe'>
-> = ['fullName', 'githubProfileUrl', 'role', 'aboutMe'];
-
 const toDate = (value?: string | number | Date | null): Date =>
   value ? new Date(value) : new Date();
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
+
+const hasText = (value?: string | null) => typeof value === 'string' && value.trim() !== '';
+
+const hasValidDate = (value?: string | number | Date | null) => {
+  if (!value) {
+    return false;
+  }
+
+  return !Number.isNaN(new Date(value).getTime());
+};
+
+const evaluateProfileCompletion = (profile?: ApiUserProfile | null) => {
+  if (!profile) {
+    return false;
+  }
+
+  const locationOk = [
+    profile.location,
+    profile.city,
+    profile.country,
+    profile.geolocation?.city,
+    profile.geolocation?.country,
+  ].some(hasText);
+
+  return (
+    hasText(profile.fullName) &&
+    hasText(profile.githubProfileUrl) &&
+    hasValidDate(profile.dateOfBirth ?? profile.dob) &&
+    hasText(profile.gender) &&
+    hasText(profile.interest) &&
+    hasText(profile.goal) &&
+    locationOk
+  );
+};
 
 const normalizeUserProfile = (profile?: ApiUserProfile | null): UserProfile => ({
   uid: profile?.uid ?? '',
@@ -172,21 +202,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true);
       setUserProfile(normalizeUserProfile(p));
 
-      const locationOk = [
-        p.location,
-        p.city,
-        p.country,
-        p?.geolocation?.city,
-        p?.geolocation?.country,
-      ].some((v) => typeof v === 'string' && v.trim() !== '');
-
-      const isComplete =
-        REQUIRED_PROFILE_FIELDS.every(
-          (field) => typeof p[field] === 'string' && p[field].trim() !== ''
-        ) && locationOk;
-
-      setIsProfileComplete(isComplete);
-      return isComplete;
+      const complete = evaluateProfileCompletion(p);
+      setIsProfileComplete(complete);
+      return complete;
     },
     [resetAuthState]
   );
@@ -389,6 +407,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const markProfileComplete = useCallback(() => {
+    setIsProfileComplete(true);
+  }, []);
+
   const value: AuthContextType = {
     userProfile,
     userGithubProfile,
@@ -403,6 +425,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     githubVerificationURL,
     githubVerificationStatus,
+    markProfileComplete,
     logout,
   };
 
