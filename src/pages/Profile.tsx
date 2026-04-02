@@ -7,7 +7,7 @@ import { CropperModal } from '../components/ui/CropperModal';
 import { InputField } from '../components/ui/InputField';
 import { auth } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
-import { getUserGallery, saveUserGallery } from '../services/galleryService';
+import { getUserGallery, saveUserGallery } from '../services/gallery.service';
 
 const PROFILE_API_URL = `${import.meta.env.VITE_API_BACKEND_BASE_URL}/api/profile/me`;
 const DEFAULT_PROFILE_PICTURE =
