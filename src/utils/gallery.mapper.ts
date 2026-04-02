@@ -92,3 +92,30 @@ export const removeGalleryImage = (images: GalleryImage[], id: string) => {
 
 export const updateGalleryCaption = (images: GalleryImage[], id: string, caption: string) =>
   images.map((image) => (image.id === id ? { ...image, caption } : image));
+
+export const resolvePrimaryGalleryImage = (images: GalleryImage[]): string | null => {
+  const primaryImage = images.find((image) => image.isPrimary);
+  return primaryImage?.src || images[0]?.src || null;
+};
+
+export const upsertPrimaryGalleryImage = (images: GalleryImage[], src: string): GalleryImage[] => {
+  if (!images.length) {
+    return [
+      {
+        id: createGalleryImageId(),
+        src,
+        caption: '',
+        isPrimary: true,
+      },
+    ];
+  }
+
+  const primaryIndex = images.findIndex((image) => image.isPrimary);
+  const targetIndex = primaryIndex >= 0 ? primaryIndex : 0;
+
+  return images.map((image, index) => ({
+    ...image,
+    src: index === targetIndex ? src : image.src,
+    isPrimary: index === targetIndex,
+  }));
+};
