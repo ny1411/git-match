@@ -1,4 +1,4 @@
-import type { SignupData } from '../context/auth-context';
+import type { SignupData } from '../types/auth';
 
 interface AuthActionResponse {
   success: boolean;
