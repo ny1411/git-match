@@ -13,7 +13,7 @@ const SwipeCard = ({
 }: {
   profile: Profile;
   onSwipe: (dir: 'left' | 'right') => void;
-  onCommentSend?: (profile: Profile, comment: string) => void;
+  onCommentSend?: (profile: Profile, comment: string) => Promise<void> | void;
   disabled?: boolean;
 }) => {
   const x = useMotionValue(0);
@@ -46,14 +46,14 @@ const SwipeCard = ({
     }
   }, [disabled]);
 
-  const handleSendComment = () => {
+  const handleSendComment = async () => {
     const trimmedComment = commentText.trim();
 
     if (!trimmedComment) {
       return;
     }
 
-    onCommentSend?.(profile, trimmedComment);
+    await onCommentSend?.(profile, trimmedComment);
     setCommentText('');
     setIsCommentOpen(false);
   };

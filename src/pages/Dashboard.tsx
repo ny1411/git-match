@@ -10,6 +10,7 @@ import { LocationUpdateModal } from '../components/ui/LocationUpdateModal';
 import { useAuth } from '../hooks/useAuth';
 import { useDashboardLocation } from '../hooks/useDashboardLocation';
 import { useRecommendations } from '../hooks/useRecommendations';
+import { startChatConversation } from '../services/chat.service';
 import type { Profile } from '../types/profile';
 
 const DEFAULT_GRADIENT = 'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)';
@@ -46,12 +47,36 @@ const Dashboard: React.FC = () => {
   });
 
   const [gradient, setGradient] = useState<string>(DEFAULT_GRADIENT);
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   const handleSwipe = useCallback(
     (direction: 'left' | 'right', profile: Profile) => {
       commitSwipe(direction, profile);
     },
     [commitSwipe]
+  );
+
+  const handleCommentSend = useCallback(
+    async (profile: Profile, comment: string) => {
+      setCommentError(null);
+
+      try {
+        await startChatConversation(
+          {
+            peerUserId: profile.id,
+            text: comment,
+          },
+          { token, firebaseToken },
+          userProfile?.uid
+        );
+        commitSwipe('right', profile);
+      } catch (error) {
+        setCommentError(
+          error instanceof Error ? error.message : 'Failed to start conversation.'
+        );
+      }
+    },
+    [commitSwipe, firebaseToken, token, userProfile?.uid]
   );
 
   useEffect(() => {
@@ -150,6 +175,12 @@ const Dashboard: React.FC = () => {
         </div>
       ) : null}
 
+      {commentError ? (
+        <div className="absolute top-42 z-20 rounded-full border border-red-400/30 bg-red-950/70 px-4 py-2 text-sm text-red-200 backdrop-blur-md">
+          {commentError}
+        </div>
+      ) : null}
+
       <DashboardHeader
         isLocationLoaded={isLocationLoaded}
         locationLabel={locationLabel}
@@ -168,7 +199,11 @@ const Dashboard: React.FC = () => {
         }}
       />
 
-      <SwipeContainer profiles={profiles} onSwipe={handleSwipe} />
+      <SwipeContainer
+        profiles={profiles}
+        onSwipe={handleSwipe}
+        onCommentSend={handleCommentSend}
+      />
 
       <CustomButton
         ariaLabel="Open chat"

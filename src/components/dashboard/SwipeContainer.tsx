@@ -6,6 +6,7 @@ import SwipeCard from '../match/SwipeCard';
 interface SwipeContainerProps {
   profiles: Profile[];
   onSwipe: (direction: 'left' | 'right', profile: Profile) => void;
+  onCommentSend?: (profile: Profile, comment: string) => Promise<void> | void;
 }
 
 const SWIPE_REMOVE_DELAY_MS = 100;
@@ -22,7 +23,7 @@ const cardVariants = {
   }),
 };
 
-const SwipeContainer: React.FC<SwipeContainerProps> = ({ profiles, onSwipe }) => {
+const SwipeContainer: React.FC<SwipeContainerProps> = ({ profiles, onSwipe, onCommentSend }) => {
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
   const [isSwipePending, setIsSwipePending] = useState(false);
 
@@ -80,7 +81,12 @@ const SwipeContainer: React.FC<SwipeContainerProps> = ({ profiles, onSwipe }) =>
             exit="exit"
             className="absolute inset-0 h-full w-full"
           >
-            <SwipeCard profile={profiles[0]} onSwipe={handleSwipe} disabled={isSwipePending} />
+            <SwipeCard
+              profile={profiles[0]}
+              onSwipe={handleSwipe}
+              onCommentSend={onCommentSend}
+              disabled={isSwipePending}
+            />
           </motion.div>
         ) : null}
       </AnimatePresence>
