@@ -6,14 +6,24 @@ import MessageStatusIcon from './MessageStatusIcon';
 interface ChatSidebarProps {
   conversations: Conversation[];
   activeChatId: string | null;
+  searchQuery: string;
+  isLoading?: boolean;
+  errorMessage?: string | null;
   onBack: () => void;
+  onRetry: () => void;
+  onSearchQueryChange: (value: string) => void;
   onSelectConversation: (conversationId: string) => void;
 }
 
 const ChatSidebar: FC<ChatSidebarProps> = ({
   conversations,
   activeChatId,
+  searchQuery,
+  isLoading = false,
+  errorMessage,
   onBack,
+  onRetry,
+  onSearchQueryChange,
   onSelectConversation,
 }) => {
   return (
@@ -38,14 +48,39 @@ const ChatSidebar: FC<ChatSidebarProps> = ({
           <input
             type="text"
             placeholder="Search matches..."
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pr-4 pl-10 text-sm text-white placeholder-gray-500 transition-all focus:bg-white/10 focus:outline-none focus:border-cyan-400/50"
           />
         </div>
       </div>
 
       <div className="custom-scrollbar flex-1 overflow-y-auto">
+        {errorMessage ? (
+          <div className="mx-4 mb-4 rounded-2xl border border-red-400/20 bg-red-950/40 p-4 text-sm text-red-100">
+            <p>{errorMessage}</p>
+            <button
+              onClick={onRetry}
+              className="mt-3 rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/10"
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
+
+        {isLoading ? (
+          <div className="px-4 py-6 text-sm text-gray-400">Loading conversations...</div>
+        ) : null}
+
+        {!isLoading && conversations.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-gray-400">
+            No chat rooms yet. Start a conversation from a match to see it here.
+          </div>
+        ) : null}
+
         {conversations.map((conversation) => {
-          const lastMessage = conversation.messages[conversation.messages.length - 1];
+          const lastMessage =
+            conversation.lastMessage ?? conversation.messages[conversation.messages.length - 1];
           const isActive = activeChatId === conversation.id;
 
           return (

@@ -6,16 +6,26 @@ import MessageStatusIcon from './MessageStatusIcon';
 interface ChatWindowProps {
   activeChat: Conversation | null;
   messageInput: string;
+  isLoading?: boolean;
+  errorMessage?: string | null;
+  isRealtimeConnected?: boolean;
+  isPeerTyping?: boolean;
   onBack: () => void;
   onMessageInputChange: (value: string) => void;
+  onRetry: () => void;
   onSendMessage: () => void;
 }
 
 const ChatWindow: FC<ChatWindowProps> = ({
   activeChat,
   messageInput,
+  isLoading = false,
+  errorMessage,
+  isRealtimeConnected = false,
+  isPeerTyping = false,
   onBack,
   onMessageInputChange,
+  onRetry,
   onSendMessage,
 }) => {
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -60,7 +70,13 @@ const ChatWindow: FC<ChatWindowProps> = ({
           <div>
             <h2 className="leading-tight font-bold text-white">{activeChat.user.name}</h2>
             <p className="text-xs text-gray-400">
-              {activeChat.user.online ? 'Online now' : 'Offline'}
+              {isPeerTyping
+                ? 'Typing...'
+                : activeChat.user.online
+                  ? 'Online now'
+                  : isRealtimeConnected
+                    ? 'Offline'
+                    : 'Realtime unavailable'}
             </p>
           </div>
         </div>
@@ -79,11 +95,33 @@ const ChatWindow: FC<ChatWindowProps> = ({
       </div>
 
       <div className="custom-scrollbar flex flex-1 flex-col space-y-4 overflow-y-auto p-4 md:p-6">
+        {errorMessage ? (
+          <div className="rounded-2xl border border-red-400/20 bg-red-950/40 p-4 text-sm text-red-100">
+            <p>{errorMessage}</p>
+            <button
+              onClick={onRetry}
+              className="mt-3 rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/10"
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
+
         <div className="my-4 flex justify-center">
           <span className="rounded-full border border-white/5 bg-white/5 px-3 py-1 text-xs font-medium text-gray-400 backdrop-blur-sm">
-            Today
+            {isRealtimeConnected ? 'Live chat' : 'Connecting...'}
           </span>
         </div>
+
+        {isLoading ? (
+          <div className="text-sm text-gray-400">Loading messages...</div>
+        ) : null}
+
+        {!isLoading && activeChat.messages.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center text-center text-sm text-gray-400">
+            No messages yet. Say hello to start the conversation.
+          </div>
+        ) : null}
 
         {activeChat.messages.map((message) => {
           const isCurrentUser = message.sender === 'me';
@@ -115,6 +153,14 @@ const ChatWindow: FC<ChatWindowProps> = ({
             </div>
           );
         })}
+
+        {isPeerTyping ? (
+          <div className="flex justify-start">
+            <div className="rounded-2xl rounded-bl-sm border border-white/5 bg-white/10 px-4 py-2.5 text-sm text-gray-300">
+              {activeChat.user.name} is typing...
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="shrink-0 border-t border-white/5 bg-black/20 p-4 backdrop-blur-md md:p-6">
