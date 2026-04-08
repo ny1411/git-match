@@ -9,6 +9,7 @@ import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
 import Gallery from '../pages/Gallery';
 import Settings from '../pages/Settings';
+import Chat from '../pages/Chat';
 import { AppRouteFallback, ProtectedRoute, PublicOnlyRoute } from './RouteGuards';
 // import Features from '../pages/Features';
 // import About from '../pages/About';
@@ -32,6 +33,7 @@ const AppRouter: React.FC = () => {
 
       <Route element={<ProtectedRoute requireCompleteProfile />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/chat" element={<Chat />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/settings" element={<Settings />} />

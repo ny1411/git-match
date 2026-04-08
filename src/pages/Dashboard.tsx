@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import EmptyState from '../components/dashboard/EmptyState';
 import SwipeContainer from '../components/dashboard/SwipeContainer';
+import { CustomButton } from '../components/ui/CustomButton';
 import { getDominantColors } from '../components/utils/colorUtils';
 import { LocationUpdateModal } from '../components/ui/LocationUpdateModal';
 import { useAuth } from '../hooks/useAuth';
@@ -168,6 +169,17 @@ const Dashboard: React.FC = () => {
       />
 
       <SwipeContainer profiles={profiles} onSwipe={handleSwipe} />
+
+      <CustomButton
+        ariaLabel="Open chat"
+        className="fixed right-6 bottom-6 z-30 w-auto cursor-pointer gap-2 bg-white/10 px-5 text-white hover:border-cyan-400/50 hover:bg-cyan-500/20 hover:text-cyan-100 md:right-10 md:bottom-10"
+        onClick={() => {
+          navigate('/chat');
+        }}
+      >
+        <MessageCircle size={20} />
+        <span className="text-sm font-medium">Chat</span>
+      </CustomButton>
 
       {isLocationModalOpen ? (
         <LocationUpdateModal
