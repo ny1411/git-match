@@ -59,6 +59,8 @@ const parseDate = (value: unknown) => {
   return null;
 };
 
+const hasResolvableDate = (value: unknown) => Boolean(parseDate(value));
+
 const toIsoString = (value: unknown, fallback = new Date()) => {
   const resolvedDate = parseDate(value) ?? fallback;
   return resolvedDate.toISOString();
@@ -251,10 +253,20 @@ const resolveMessageStatus = (
 export const normalizeChatMessage = (
   value: unknown,
   currentUserId?: string | null
-): ChatMessage => {
+): ChatMessage | null => {
   const record = asRecord(value);
   const roomRecord = asRecord(record.room);
   const senderRecord = asRecord(record.sender);
+  const roomId = getString(record.roomId, roomRecord.id, roomRecord.roomId) ?? '';
+  const text = getString(record.text, record.content, record.message, record.body) ?? '';
+  const createdAtSource = record.createdAt ?? record.timestamp ?? record.sentAt ?? record.updatedAt;
+  const hasCreatedAt = hasResolvableDate(createdAtSource);
+  const rawMessageId = getString(record.id, record.messageId, record.clientMessageId);
+
+  if (!roomId || !text || !hasCreatedAt || !rawMessageId) {
+    return null;
+  }
+
   const senderUserId =
     getString(
       record.senderUserId,
@@ -265,18 +277,14 @@ export const normalizeChatMessage = (
     ) ?? '';
   const sender: ChatMessage['sender'] =
     currentUserId && senderUserId === currentUserId ? 'me' : 'them';
-  const createdAt = toIsoString(
-    record.createdAt ?? record.timestamp ?? record.sentAt ?? record.updatedAt
-  );
-  const messageId =
-    getString(record.id, record.messageId, record.clientMessageId) ??
-    `chat-message-${createdAt}`;
+  const createdAt = toIsoString(createdAtSource);
+  const messageId = rawMessageId;
   const clientMessageId = getString(record.clientMessageId);
 
   return {
     id: messageId,
-    roomId: getString(record.roomId, roomRecord.id, roomRecord.roomId) ?? '',
-    text: getString(record.text, record.content, record.message, record.body) ?? '',
+    roomId,
+    text,
     senderUserId,
     sender,
     createdAt,
@@ -309,15 +317,17 @@ export const normalizeConversation = (
   const peerName =
     getString(peerRecord.fullName, peerRecord.name, peerRecord.username, peerRecord.displayName) ??
     DEFAULT_USER_NAME;
-  const messageRecords = asArray(record.messages).map((message) =>
-    normalizeChatMessage(
-      {
-        roomId,
-        ...asRecord(message),
-      },
-      currentUserId
+  const messageRecords = asArray(record.messages)
+    .map((message) =>
+      normalizeChatMessage(
+        {
+          roomId,
+          ...asRecord(message),
+        },
+        currentUserId
+      )
     )
-  );
+    .filter((message): message is ChatMessage => Boolean(message));
   const rawLastMessage = record.lastMessage ?? record.latestMessage;
   const normalizedLastMessage = rawLastMessage
     ? normalizeChatMessage(
@@ -328,9 +338,8 @@ export const normalizeConversation = (
         currentUserId
       )
     : messageRecords[messageRecords.length - 1] ?? null;
-  const updatedAt = toIsoString(
-    record.updatedAt ?? normalizedLastMessage?.createdAt ?? record.createdAt
-  );
+  const updatedAtSource = record.updatedAt ?? normalizedLastMessage?.createdAt ?? record.createdAt;
+  const updatedAt = hasResolvableDate(updatedAtSource) ? toIsoString(updatedAtSource) : null;
 
   return {
     id: roomId,
@@ -374,7 +383,9 @@ export const mergeChatMessages = (
 ) => {
   const mergedMessages = [...existingMessages];
 
-  incomingMessages.forEach((incomingMessage) => {
+  incomingMessages
+    .filter((incomingMessage) => Boolean(incomingMessage.id && incomingMessage.roomId && incomingMessage.text))
+    .forEach((incomingMessage) => {
     const matchingMessageIndex = mergedMessages.findIndex(
       (message) =>
         message.id === incomingMessage.id ||
@@ -394,7 +405,7 @@ export const mergeChatMessages = (
     }
 
     mergedMessages.push(incomingMessage);
-  });
+    });
 
   return mergedMessages.sort((left, right) => {
     const leftTimestamp = parseDate(left.createdAt)?.getTime() ?? 0;

@@ -28,9 +28,16 @@ interface UseChatOptions {
 const DEFAULT_MESSAGES_LIMIT = 30;
 const MESSAGE_SEND_REST_FALLBACK_MS = 5000;
 const TYPING_RESET_MS = 1500;
+const CLIENT_MESSAGE_ID_PREFIX = 'client:';
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
+
+const isRenderableChatMessage = (message: Conversation['messages'][number]) =>
+  Boolean(message.id && message.roomId && message.text && message.createdAt);
+
+const isServerBackedMessageId = (messageId: string) =>
+  Boolean(messageId) && !messageId.startsWith(CLIENT_MESSAGE_ID_PREFIX);
 
 const generateClientMessageId = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -142,7 +149,9 @@ export const useChat = ({
 
   const acknowledgeMessages = useCallback(
     async (roomId: string, messageIds: string[]) => {
-      if (!messageIds.length) {
+      const validMessageIds = messageIds.filter(isServerBackedMessageId);
+
+      if (!validMessageIds.length) {
         return;
       }
 
@@ -150,7 +159,7 @@ export const useChat = ({
         ...conversation,
         unreadCount: 0,
         messages: conversation.messages.map((message) =>
-          messageIds.includes(message.id)
+          validMessageIds.includes(message.id)
             ? {
                 ...message,
                 isDeliveredToMe: true,
@@ -160,15 +169,15 @@ export const useChat = ({
         ),
       }));
 
-      messageIds.forEach((messageId) => {
+      validMessageIds.forEach((messageId) => {
         emitSocketEvent('chat:message:delivered', { roomId, messageId });
         emitSocketEvent('chat:message:read', { roomId, messageId });
       });
 
       try {
-        await markChatRoomRead(roomId, { messageIds }, auth);
+        await markChatRoomRead(roomId, { messageIds: validMessageIds }, auth);
       } catch (error) {
-        setChatError(getErrorMessage(error, 'Failed to update read receipts.'));
+        console.warn('Failed to update read receipts.', error);
       }
     },
     [auth, emitSocketEvent, updateConversation]
@@ -177,6 +186,11 @@ export const useChat = ({
   const syncIncomingMessage = useCallback(
     (payload: unknown) => {
       const normalizedMessage = normalizeChatMessage(payload, userId);
+
+      if (!normalizedMessage) {
+        return;
+      }
+
       clearSendFallbackTimer(normalizedMessage.clientMessageId);
       const eventRoom =
         typeof payload === 'object' && payload !== null
@@ -306,7 +320,7 @@ export const useChat = ({
 
     try {
       const fetchedRooms = await getChatRooms(auth, userId);
-      const sortedRooms = sortConversations(fetchedRooms);
+      const sortedRooms = sortConversations(fetchedRooms.filter((room) => Boolean(room.id)));
       setConversations(sortedRooms);
       setActiveChatId((currentActiveRoomId) => {
         if (currentActiveRoomId && sortedRooms.some((room) => room.id === currentActiveRoomId)) {
@@ -340,7 +354,10 @@ export const useChat = ({
         );
 
         updateConversation(roomId, (conversation) => {
-          const mergedMessages = mergeChatMessages(conversation.messages, page.messages);
+          const mergedMessages = mergeChatMessages(
+            conversation.messages,
+            page.messages.filter(isRenderableChatMessage)
+          );
 
           return {
             ...conversation,
@@ -494,7 +511,13 @@ export const useChat = ({
     }
 
     const unreadIncomingMessageIds = activeChat.messages
-      .filter((message) => message.sender === 'them' && !message.isReadByMe)
+      .filter(
+        (message) =>
+          isRenderableChatMessage(message) &&
+          message.sender === 'them' &&
+          !message.isReadByMe &&
+          isServerBackedMessageId(message.id)
+      )
       .map((message) => message.id);
 
     if (!unreadIncomingMessageIds.length) {
