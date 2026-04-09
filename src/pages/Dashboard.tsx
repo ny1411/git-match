@@ -71,9 +71,7 @@ const Dashboard: React.FC = () => {
         );
         commitSwipe('right', profile);
       } catch (error) {
-        setCommentError(
-          error instanceof Error ? error.message : 'Failed to start conversation.'
-        );
+        setCommentError(error instanceof Error ? error.message : 'Failed to start conversation.');
       }
     },
     [commitSwipe, firebaseToken, token, userProfile?.uid]
@@ -149,19 +147,6 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (profiles.length === 0) {
-    return (
-      <EmptyState
-        title="No more profiles"
-        message="Check back later for more matches!"
-        actionLabel="Refresh recommendations"
-        onAction={() => {
-          void loadRecommendations();
-        }}
-      />
-    );
-  }
-
   return (
     <div
       className="relative flex h-screen w-screen flex-col items-center justify-center overflow-hidden transition-colors duration-700 ease-in-out"
@@ -199,11 +184,22 @@ const Dashboard: React.FC = () => {
         }}
       />
 
-      <SwipeContainer
-        profiles={profiles}
-        onSwipe={handleSwipe}
-        onCommentSend={handleCommentSend}
-      />
+      {profiles.length > 0 ? (
+        <SwipeContainer
+          profiles={profiles}
+          onSwipe={handleSwipe}
+          onCommentSend={handleCommentSend}
+        />
+      ) : (
+        <EmptyState
+          title="No more profiles"
+          message="Check back later for more matches!"
+          actionLabel="Refresh recommendations"
+          onAction={() => {
+            void loadRecommendations();
+          }}
+        />
+      )}
 
       <CustomButton
         ariaLabel="Open chat"
