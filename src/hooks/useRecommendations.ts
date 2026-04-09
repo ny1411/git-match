@@ -15,6 +15,10 @@ interface ApiResponse {
   message: string;
 }
 
+interface RightSwipeResponse extends ApiResponse {
+  connected?: boolean;
+}
+
 interface UseRecommendationsOptions {
   authLoading: boolean;
   token?: string | null;
@@ -84,7 +88,16 @@ export const useRecommendations = ({
         }).catch((error) => {
           setSwipeError(error instanceof Error ? error.message : 'Failed to record left swipe');
         });
+        return;
       }
+
+      void authorizedRequest<RightSwipeResponse>('/api/swipe/right', {
+        method: 'POST',
+        auth: { token, firebaseToken },
+        body: JSON.stringify({ toUserId: swipedProfile.id }),
+      }).catch((error) => {
+        setSwipeError(error instanceof Error ? error.message : 'Failed to record right swipe');
+      });
     },
     [firebaseToken, token]
   );
