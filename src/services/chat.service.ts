@@ -100,9 +100,9 @@ export const getChatRooms = async (
     signal,
   });
 
-  return getArrayFromUnknown(response.rooms ?? response.data).map((room) =>
-    normalizeConversation(room, currentUserId)
-  );
+  return getArrayFromUnknown(response.rooms ?? response.data)
+    .map((room) => normalizeConversation(room, currentUserId))
+    .filter((room) => Boolean(room.id));
 };
 
 export const createDirectChatRoom = async (
@@ -116,7 +116,13 @@ export const createDirectChatRoom = async (
     body: JSON.stringify(payload),
   });
 
-  return normalizeConversation(response.room ?? response.data, currentUserId);
+  const normalizedRoom = normalizeConversation(response.room ?? response.data, currentUserId);
+
+  if (!normalizedRoom.id) {
+    throw new Error('Invalid room response from server.');
+  }
+
+  return normalizedRoom;
 };
 
 export const getChatRoomMessages = async (
@@ -149,9 +155,11 @@ export const getChatRoomMessages = async (
       signal,
     }
   );
-  const messages = getArrayFromUnknown(response.messages ?? response.data).map((message) =>
-    normalizeChatMessage({ roomId, ...(message as Record<string, unknown>) }, currentUserId)
-  );
+  const messages = getArrayFromUnknown(response.messages ?? response.data)
+    .map((message) =>
+      normalizeChatMessage({ roomId, ...(message as Record<string, unknown>) }, currentUserId)
+    )
+    .filter((message): message is ChatMessage => Boolean(message));
 
   const responseData =
     typeof response.data === 'object' && response.data !== null
@@ -177,13 +185,19 @@ export const sendChatMessage = async (
     body: JSON.stringify(payload),
   });
 
-  return normalizeChatMessage(
+  const normalizedMessage = normalizeChatMessage(
     {
       roomId,
       ...(getMessagePayload(response) as Record<string, unknown>),
     },
     currentUserId
   );
+
+  if (!normalizedMessage) {
+    throw new Error('Invalid message response from server.');
+  }
+
+  return normalizedMessage;
 };
 
 export const markChatRoomRead = async (
@@ -214,5 +228,11 @@ export const startChatConversation = async (
     body: JSON.stringify(requestPayload),
   });
 
-  return normalizeConversation(response.room ?? response.data, currentUserId);
+  const normalizedRoom = normalizeConversation(response.room ?? response.data, currentUserId);
+
+  if (!normalizedRoom.id) {
+    throw new Error('Invalid room response from server.');
+  }
+
+  return normalizedRoom;
 };
