@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Profile } from '../types/profile';
 import { authorizedRequest } from '../services/api.service';
+import { swipeLeft, swipeRight } from '../services/matchmaking.service';
 import { mapRecommendationToProfile, type RecommendationUser } from '../utils/profile.mapper';
 
 interface RecommendationsResponse {
@@ -8,15 +9,6 @@ interface RecommendationsResponse {
   message: string;
   count: number;
   users?: RecommendationUser[];
-}
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-}
-
-interface RightSwipeResponse extends ApiResponse {
-  connected?: boolean;
 }
 
 interface UseRecommendationsOptions {
@@ -68,6 +60,26 @@ export const useRecommendations = ({
     (direction: 'left' | 'right', swipedProfile: Profile) => {
       setSwipeError(null);
 
+      if (direction === 'left') {
+        // Left swipes are recorded server-side but are not treated as dismissals in swipe lists.
+        setProfiles((previousProfiles) => {
+          if (previousProfiles.length === 0) {
+            return previousProfiles;
+          }
+
+          if (previousProfiles[0].id === swipedProfile.id) {
+            return previousProfiles.slice(1);
+          }
+
+          return previousProfiles.filter((profile) => profile.id !== swipedProfile.id);
+        });
+
+        void swipeLeft(swipedProfile.id, { token, firebaseToken }).catch((error) => {
+          setSwipeError(error instanceof Error ? error.message : 'Failed to record left swipe');
+        });
+        return;
+      }
+
       setProfiles((previousProfiles) => {
         if (previousProfiles.length === 0) {
           return previousProfiles;
@@ -80,22 +92,7 @@ export const useRecommendations = ({
         return previousProfiles.filter((profile) => profile.id !== swipedProfile.id);
       });
 
-      if (direction === 'left') {
-        void authorizedRequest<ApiResponse>('/api/leftswipe', {
-          method: 'POST',
-          auth: { token, firebaseToken },
-          body: JSON.stringify({ targetUserId: swipedProfile.id }),
-        }).catch((error) => {
-          setSwipeError(error instanceof Error ? error.message : 'Failed to record left swipe');
-        });
-        return;
-      }
-
-      void authorizedRequest<RightSwipeResponse>('/api/swipe/right', {
-        method: 'POST',
-        auth: { token, firebaseToken },
-        body: JSON.stringify({ toUserId: swipedProfile.id }),
-      }).catch((error) => {
+      void swipeRight(swipedProfile.id, { token, firebaseToken }).catch((error) => {
         setSwipeError(error instanceof Error ? error.message : 'Failed to record right swipe');
       });
     },
